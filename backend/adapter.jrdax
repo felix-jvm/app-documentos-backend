@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<jsonDataAdapter class="net.sf.jasperreports.data.json.JsonDataAdapterImpl">
+  <name>adapter</name>
+  <dataFile type="repositoryDataLocation">
+    <location>C:\Users\vasfe\OneDrive\Escritorio\Proyecto-inventario\backend_env\backend\backend\ingestFile.json</location>
+  </dataFile>
+  <selectExpression>data</selectExpression>
+  <locale>es_MX</locale>
+  <timeZone>America/Santo_Domingo</timeZone>
+  <useConnection>false</useConnection>
+  <language>json</language>
+</jsonDataAdapter>
