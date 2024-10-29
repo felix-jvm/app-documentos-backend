@@ -34,8 +34,8 @@ class ProcedimientoView(viewsets.ViewSet):
   if req.data['mode'] == 'requestNonUsedCodes':
    codeData = {'procedimiento_Codigo':[]}
    procedMapping = {}
-   procedRecords = list(M.Procedimiento.objects.all().values('Codigo','ID'))
-   docsRecords = list(M.Documentos.objects.all().values('ID','Codigo','Descripcion'))
+   procedRecords = list(M.Procedimiento.objects.values('Codigo','ID'))
+   docsRecords = list(M.Documentos.objects.filter(Codigo__contains='PRO').values('ID','Codigo','Descripcion'))
    for procedObj in procedRecords:
     procedMapping[procedObj['Codigo']] = procedObj['ID']
 
@@ -46,7 +46,7 @@ class ProcedimientoView(viewsets.ViewSet):
    return Response(codeData)    
 
   if req.data['mode'] == 'fillForm':
-   data['DocumentosReferencias-IDDocumento'] = list(M.Documentos.objects.all().values('ID','Codigo'))
+   data['DocumentosReferencias-IDDocumento'] = list(M.Documentos.objects.all().values('ID','Codigo').filter(Codigo__contains='PRO'))
    data['Responsabilidades-IDPuesto'] = list(M.Puestos.objects.all().values('ID','Descripcion'))
    data['Responsabilidades-Descripcion'] = list(M.Responsabilidades.objects.all().values('ID','Descripcion'))
    data['TerminologiasDef-IDTermino'] = list(M.Termino.objects.all().values('ID','Descripcion'))   
@@ -61,6 +61,11 @@ class ProcedimientoView(viewsets.ViewSet):
     specificData = {}
     relationsObj = list(M.Procedimiento.objects.filter(Codigo=req.data['procedCodigo']))
     procId = ''
+    if not relationsObj:
+     relationsObj = list(M.Procedimiento.objects.filter(Objetivo=req.data['procedCodigo']))     
+    if not relationsObj:
+     relationsObj = list(M.Procedimiento.objects.filter(Alcance=req.data['procedCodigo']))     
+     
     if relationsObj:
      specificData['Procedimiento_Codigo'] = relationsObj[0].Codigo
      specificData['Procedimiento_Objetivo'] = relationsObj[0].Objetivo
@@ -165,7 +170,6 @@ class ProcedimientoView(viewsets.ViewSet):
       tableName = list(record.keys())[0]
       recordToDelete = eval('M.%s'%(tableName)).objects.filter(pk=record[tableName])
       if recordToDelete:
-       print('------------------xxxxxxxxxxxxxxxx-------->',tableName,recordToDelete) 
        recordToDelete[0].delete()
 
    return Response({'status':'ok'})
@@ -298,8 +302,8 @@ class DocumentoView(viewsets.ViewSet):
   data = {}
   if req.data['mode'] == 'fillForm':
   #  recordsIterator = lambda columns,toIterate,refTable=None,*userFriendlyColumn:[{prop:(list(eval('M.%s'%(refTable)).objects.filter(pk=record[prop]).values(*userFriendlyColumn))[:1] if 'ID' in prop and len(prop) > 2 else record[prop]) for prop in columns if type(record)==dict and prop in record.keys()} for record in toIterate]              
-   data['departamentoSelect'] = list(M.Departamento.objects.all().values('ID','Codigo'))
-   data['tipoDocumentoSelect'] = list(M.TipoDocumento.objects.all().values('ID','Codificacion'))
+   data['departamentoSelect'] = list(M.Departamento.objects.all().values('ID','Codigo','Descripcion'))
+   data['tipoDocumentoSelect'] = list(M.TipoDocumento.objects.all().values('ID','Codificacion','Descripcion'))
    return Response(data)
   
   elif req.data['mode'] == 'requestCodeSequence':
@@ -462,6 +466,7 @@ class PuestoView(viewsets.ViewSet):
    if req.data['data']['UnidadNegocio']:fields['UnidadNegocio'] = req.data['data']['UnidadNegocio']
    if req.data['data']['Actividad']:fields['Actividad'] = req.data['data']['Actividad']
    M.Puestos.objects.create(**fields)
+   data = fields
   elif req.data['mode'] == 'requestUpdateData':
    obj = M.Puestos.objects.get(pk=req.data['ID']['current'])
    data = {}
