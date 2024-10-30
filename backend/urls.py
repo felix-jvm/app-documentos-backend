@@ -174,13 +174,13 @@ class ProcedimientoView(viewsets.ViewSet):
    return Response({'status':'ok'})
   
   if req.data['mode'] == 'save_diagrama_flujo_img':
-   recordToUpdate = list(M.Procedimiento.objects.filter(Codigo=req.data['procedCode']))
+   recordToUpdate = list(M.Procedimiento.objects.filter(Codigo=req.data['procedCode'].strip().replace(' ','')))
    if recordToUpdate:
-    recordToUpdate[0].Diagrama_Flujo = req.data['img']
+    recordToUpdate[0].Diagrama_Flujo = req.data['img'].read()
     recordToUpdate[0].save()
 
   if req.data['mode'] == 'deleteRecord':
-   objtoDelete = list(M.Procedimiento.objects.filter(Codigo=req.data['procedCodigo']))
+   objtoDelete = list(M.Procedimiento.objects.filter(Codigo=req.data['procedCodigo'].strip().replace(' ','')))
    if objtoDelete:
     objtoDelete[0].deleted = True
     objtoDelete[0].save()
