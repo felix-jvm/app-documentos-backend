@@ -69,7 +69,7 @@ class ProcedimientoView(viewsets.ViewSet):
      specificData['Procedimiento_Codigo'] = relationsObj[0].Codigo
      specificData['Procedimiento_Objetivo'] = relationsObj[0].Objetivo
      specificData['Procedimiento_Alcance'] = relationsObj[0].Alcance
-     specificData['Diagrama_Flujo'] = ImageSerializer(relationsObj[0],many=False).data
+    #  specificData['Diagrama_Flujo'] = ImageSerializer(relationsObj[0],many=False).data
      procId = relationsObj[0].ID
     else:
      return Response([])
