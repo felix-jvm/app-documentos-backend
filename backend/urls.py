@@ -3,7 +3,6 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from django.conf.urls.static import static
-from pyreportjasper import PyReportJasper
 from .serializer import ImageSerializer
 from django.http import HttpResponse
 from django.core import serializers

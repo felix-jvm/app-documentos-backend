@@ -5,7 +5,7 @@ class Procedimiento(models.Model):
     Codigo = models.CharField(db_column='Codigo', max_length=500, blank=False, null=False)
     Objetivo = models.TextField(db_column='Objetivo', blank=False, null=False)
     Alcance = models.TextField(db_column='Alcance', blank=False, null=False)
-    Diagrama_Flujo = models.ImageField(db_column='Diagrama_Flujo', blank=True, null=True)
+    Diagrama_Flujo = models.BinaryField(db_column='Diagrama_Flujo', blank=True, null=True)
     deleted = models.BooleanField(db_column='deleted', default=False, blank=True, null=True)
 
 
