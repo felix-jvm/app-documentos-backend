@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure--r8z6%8pk**sb_vv2#wt-&&w*u9859qk_#d8e^-=%%ghh43hf!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -99,7 +99,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'dbdocumentos',
         'USER': 'postgres',
-        'PASSWORD': 'seguridad2023',
+        'PASSWORD': 'felixsusjE@0...',
         'HOST': 'localhost',
         'PORT':5432
     }

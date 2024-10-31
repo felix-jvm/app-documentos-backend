@@ -45,7 +45,7 @@ class ProcedimientoView(viewsets.ViewSet):
    return Response(codeData)    
 
   if req.data['mode'] == 'fillForm':
-   data['DocumentosReferencias-IDDocumento'] = list(M.Documentos.objects.all().values('ID','Codigo').filter(Codigo__contains='PRO'))
+   data['DocumentosReferencias-IDDocumento'] = list(M.Documentos.objects.all().values('ID','Codigo','Descripcion').filter(Codigo__contains='PRO'))
    data['Responsabilidades-IDPuesto'] = list(M.Puestos.objects.all().values('ID','Descripcion'))
    data['Responsabilidades-Descripcion'] = list(M.Responsabilidades.objects.all().values('ID','Descripcion'))
    data['TerminologiasDef-IDTermino'] = list(M.Termino.objects.all().values('ID','Descripcion'))   
@@ -306,15 +306,14 @@ class DocumentoView(viewsets.ViewSet):
    return Response(data)
   
   elif req.data['mode'] == 'requestCodeSequence':
-   sequenceToLook = req.data['code']
+   sequenceToLook = req.data['code'].strip().replace(' ','')
    highestSequence = list(M.Documentos.objects.filter(TipoDoc_Dep_Repr__contains=sequenceToLook).order_by('-TipoDoc_Dep_Repr'))
    if highestSequence and highestSequence[0].TipoDoc_Dep_Repr:
     highestSequence = int(highestSequence[0].TipoDoc_Dep_Repr.split('-')[2]) + 1
     highestSequence = str(highestSequence).zfill(3)
-    return Response(highestSequence)
-   
-   return Response([])
-
+   else:
+    highestSequence = '001' 
+   return Response(highestSequence)
 
   elif req.data['mode'] == 'create':
    fields = {}
