@@ -99,6 +99,9 @@ class ProcedimientoView(viewsets.ViewSet):
 
     specificData['HistorialCambios'] = list(M.HistorialCambios.objects.filter(IDProcedimiento=procId).values('ID','Fecha','Version','Descripcion'))    
 
+    relationsObj = M.Documentos.objects.filter(Codigo=req.data['procedCodigo'].strip().replace(' ','')).values('Descripcion','Fecha','Version')
+    if relationsObj:specificData['Documentos'] = relationsObj[0]
+
     data['specificData'] = specificData
 
   if req.data['mode'] == 'CREATE':
@@ -178,6 +181,11 @@ class ProcedimientoView(viewsets.ViewSet):
    if recordToUpdate and req.data['img']!='null':
     recordToUpdate[0].Diagrama_Flujo = req.data['img'].read()
     recordToUpdate[0].save()
+
+  if req.data['mode'] == 'request_proced_diagrama_flujo':
+   procedRecord = list(M.Procedimiento.objects.filter(Codigo=req.data['procedCode'].strip().replace(' ','')))   
+   if procedRecord:return HttpResponse(procedRecord[0].Diagrama_Flujo,content_type='image/png')
+   return Response([]) 
 
   if req.data['mode'] == 'deleteRecord':
    objtoDelete = list(M.Procedimiento.objects.filter(Codigo=req.data['procedCodigo'].strip().replace(' ','')))
