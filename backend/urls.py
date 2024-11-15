@@ -204,10 +204,11 @@ class ProcedimientoView(viewsets.ViewSet):
   proceData = {'fields':['Còdigo','Descripcion','Objetivo','Fecha','Version'],'data':[]}
   for procedRecord in data:
    jointRecord = {}
-   jointRecord['Codigo'] = procedRecord['Codigo']
+   jointRecord['Codigo'] = procedRecord['Codigo'].strip().replace(' ','')
    jointRecord['Objetivo'] = procedRecord['Objetivo']
    if jointRecord['Codigo']:
     docRecord = list(M.Documentos.objects.filter(Codigo=jointRecord['Codigo']))
+    print('----------------xxx>',jointRecord['Codigo'],len(jointRecord['Codigo']))
     if docRecord:
      jointRecord['Descripcion'] = docRecord[0].Descripcion
      jointRecord['Fecha'] = docRecord[0].Fecha
@@ -324,16 +325,16 @@ class DocumentoView(viewsets.ViewSet):
    return Response(highestSequence)
 
   elif req.data['mode'] == 'create':
+   
    fields = {}
-   IDDepartamento = req.data['data']['sequence'].split('-')[1]
-   IDTipoDocumento = req.data['data']['sequence'].split('-')[0]
-   fields['Codigo'] = req.data['data']['Codigo']
+   IDDepartamento = req.data['data']['sequence'].split('-')[1].strip().replace(' ','')
+   IDTipoDocumento = req.data['data']['sequence'].split('-')[0].strip().replace(' ','')
+   fields['Codigo'] = req.data['data']['Codigo'].strip().replace(' ','')
    fields['Descripcion'] = req.data['data']['Descripcion']
    fields['Version'] = req.data['data']['Version']
    fields['Fecha'] = req.data['data']['Fecha']
    IDTipoDocumento = list(M.TipoDocumento.objects.filter(Codificacion=IDTipoDocumento).values('ID'))
    IDDepartamento = list(M.Departamento.objects.filter(Codigo=IDDepartamento).values('ID'))
-   print('------------->',IDDepartamento,IDTipoDocumento)
    if IDTipoDocumento:fields['IDTipoDocumento'] = IDTipoDocumento[0]['ID']
    if IDDepartamento:fields['IDDepartamento'] = IDDepartamento[0]['ID']
 
