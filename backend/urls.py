@@ -1013,13 +1013,6 @@ class UsuarioView(viewsets.ViewSet):
    M.Usuario.objects.create(**{'Nombre':user,'Contrasena':readyPass,'Activo':True,'PermisoNivel':permisonivel})
    return Response({'msg':'ok'})   
   elif req.data['mode'] == 'login': 
-   
-   print('--------------------------->CHICLEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeEEEEEEEEEEEEEEEEEEE')
-   user = 'admin'
-   password = 'admin123'
-   readyPass = bcrypt.hashpw(password.encode('utf-8'),bcrypt.gensalt())
-   M.Usuario.objects.create(**{'Nombre':user,'Contrasena':readyPass,'Activo':True,'PermisoNivel':2})   
-
    recordsToFilter = list(M.Usuario.objects.filter(Nombre=user))
    for record in recordsToFilter:
     hashedPass = record.Contrasena.tobytes()
