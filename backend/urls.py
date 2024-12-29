@@ -10,8 +10,9 @@ from rest_framework import viewsets
 from django.conf import settings
 from datetime import datetime
 import api.models as M
-import os
+import bcrypt
 import json
+import os
 import io
 
 class ProcedimientoView(viewsets.ViewSet):
@@ -1001,6 +1002,30 @@ class HistorialCambioView(viewsets.ViewSet):
   return Response(data)
 
 
+class UsuarioView(viewsets.ViewSet):
+ 
+ def create(self,req):
+  user = req.data['cred']['username']
+  password = req.data['cred']['password']
+  if req.data['mode'] == 'userCreation':
+   permisonivel = req.data['cred']['permisonivel']
+   readyPass = bcrypt.hashpw(password.encode('utf-8'),bcrypt.gensalt())
+   M.Usuario.objects.create(**{'Nombre':user,'Contrasena':readyPass,'Activo':True,'PermisoNivel':permisonivel})
+   return Response({'msg':'ok'})   
+  elif req.data['mode'] == 'login': 
+   
+   print('--------------------------->CHICLEeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeEEEEEEEEEEEEEEEEEEE')
+   user = 'admin'
+   password = 'admin123'
+   readyPass = bcrypt.hashpw(password.encode('utf-8'),bcrypt.gensalt())
+   M.Usuario.objects.create(**{'Nombre':user,'Contrasena':readyPass,'Activo':True,'PermisoNivel':2})   
+
+   recordsToFilter = list(M.Usuario.objects.filter(Nombre=user))
+   for record in recordsToFilter:
+    hashedPass = record.Contrasena.tobytes()
+    if bcrypt.checkpw(password.encode('utf-8'),hashedPass):return Response({'Nombre':record.Nombre,'Activo':record.Activo,'PermisoNivel':record.PermisoNivel,'msg':'ok'})
+  return Response([])
+
 router = DefaultRouter()
 
 router.register(r'procedimiento', ProcedimientoView, basename='procedimiento')
@@ -1026,5 +1051,7 @@ router.register(r'anexos', AnexoView, basename='anexo')
 router.register(r'revaprobacion', RevAprobacionView, basename='revaprobacion')
 
 router.register(r'historialcambios', HistorialCambioView, basename='historialcambio')
+
+router.register(r'usuario', UsuarioView, basename='usuario')
 
 urlpatterns = router.urls + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

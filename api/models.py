@@ -151,3 +151,31 @@ class Departamento(models.Model):
    class Meta:
         managed = True
         db_table = 'Departamento'
+
+class Usuario(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Nombre = models.CharField(db_column='Nombre', max_length=50, blank=False, null=False) 
+    Contrasena = models.BinaryField(db_column='Contrasena', blank=False, null=False)
+    Activo = models.BooleanField(db_column='Activo', default=True, blank=False, null=False)    
+    PermisoNivel = models.IntegerField(db_column='PermisoNivel', blank=False, null=False)
+
+    class Meta:
+        managed = True
+        db_table = 'Usuario'    
+
+class PermisoNivel(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Nivel = models.IntegerField(db_column='Nivel', blank=False, null=False)
+    Descripcion = models.CharField(db_column='Descripcion', max_length=100, blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'PermisoNivel'
+
+class UsuarioCodigo(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Codigo = models.CharField(db_column='Codigo', max_length=100, blank=False, null=False)
+
+    class Meta:
+        managed = True
+        db_table = 'UsuarioCodigo'        
