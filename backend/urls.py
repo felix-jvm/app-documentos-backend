@@ -202,19 +202,19 @@ class ProcedimientoView(viewsets.ViewSet):
 
  def list(self, req):
   data = list(M.Procedimiento.objects.all().filter(deleted=False).values('ID','Codigo','Objetivo'))
-  proceData = {'fields':['Còdigo','Descripcion','Objetivo','Fecha','Version'],'data':[]}
+  proceData = {'columns':[{'title':'Código'},{'title':'Descripcion'},{'title':'Objetivo'},{'title':'Fecha'},{'title':'Version'}],'records':[]}
   for procedRecord in data:
-   jointRecord = {}
-   jointRecord['Codigo'] = procedRecord['Codigo'].strip().replace(' ','')
-   jointRecord['Objetivo'] = procedRecord['Objetivo']
-   if jointRecord['Codigo']:
-    docRecord = list(M.Documentos.objects.filter(Codigo=jointRecord['Codigo']))
-    print('----------------xxx>',jointRecord['Codigo'],len(jointRecord['Codigo']))
+   jointRecord = []
+   jointRecord.append(procedRecord['Codigo'].strip().replace(' ',''))
+   jointRecord.append(procedRecord['Objetivo'])
+   if jointRecord[0]:
+    docRecord = list(M.Documentos.objects.filter(Codigo=jointRecord[0]))
+    print('----------------xxx>',jointRecord[0],len(jointRecord[0]))
     if docRecord:
-     jointRecord['Descripcion'] = docRecord[0].Descripcion
-     jointRecord['Fecha'] = docRecord[0].Fecha
-     jointRecord['Version'] = docRecord[0].Version
-   proceData['data'].append(jointRecord)
+     jointRecord.append(docRecord[0].Descripcion)
+     jointRecord.append(docRecord[0].Fecha)
+     jointRecord.append(docRecord[0].Version)
+   proceData['records'].append(jointRecord)
 
   return Response(proceData)
   
@@ -363,16 +363,10 @@ class DocumentoView(viewsets.ViewSet):
   return Response({'response':'ok'}) 
  
  def list(self, req):
-  data = serializers.serialize('json',M.Documentos.objects.all())
-  if data == '[]':
-   data = M.Documentos.__doc__
-   data = data.replace(' ','')
-   data = data.replace('(','')
-   data = data.replace(')','')
-   data = data.replace('Documentos','')
-   data = data.split(',')  
-   data.append('statusEmpty')
-   data.append({'route':'documentos'})
+  data = {'columns':[{'title':'Código'},{'title':'Descripcion'},{'title':'Fecha'},{'title':'Versión'}],'records':[]}
+  unparsedData = list(M.Documentos.objects.all().values('Codigo','Descripcion','Fecha','Version'))
+  for unparsedRecord in unparsedData:
+   data['records'].append(unparsedRecord.values())
   return Response(data)
 
 
@@ -497,16 +491,10 @@ class PuestoView(viewsets.ViewSet):
   return Response({'response':'ok'}) 
 
  def list(self, req):
-  data = serializers.serialize('json',M.Puestos.objects.all())
-  if data == '[]':
-   data = M.Puestos.__doc__
-   data = data.replace(' ','')
-   data = data.replace('(','')
-   data = data.replace(')','')
-   data = data.replace('Puestos','')
-   data = data.split(',')  
-   data.append('statusEmpty')
-   data.append({'route':'puestos'})
+  data = {'columns':[{'title':'Descripcion'},{'title':'UnidadNegocio'},{'title':'Actividad'}],'records':[]}
+  unparsedData = list(M.Puestos.objects.all().values('Descripcion','UnidadNegocio','Actividad'))
+  for unparsedRecord in unparsedData:
+   data['records'].append(unparsedRecord.values())
   return Response(data)
 
 
@@ -621,16 +609,10 @@ class TerminoView(viewsets.ViewSet):
   return Response(json.dumps({'data':data}))
  
  def list(self, req):
-  data = serializers.serialize('json',M.Termino.objects.all())
-  if data == '[]':
-   data = M.Termino.__doc__
-   data = data.replace(' ','')
-   data = data.replace('(','')
-   data = data.replace(')','')
-   data = data.replace('Termino','')
-   data = data.split(',')  
-   data.append('statusEmpty')
-   data.append({'route':'termino'})  
+  data = {'columns':[{'title':'Descripción'},{'title':'Descripción General'}],'records':[]}
+  unparsedData = list(M.Termino.objects.all().values('Descripcion','DescripcionGeneral'))
+  for unparsedRecord in unparsedData:
+   data['records'].append(unparsedRecord.values())
   return Response(data)
 
  def delete(self,req):
