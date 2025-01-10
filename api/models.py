@@ -77,7 +77,7 @@ class Termino(models.Model):
 
 class DescripcionesProcedimiento(models.Model):        
    ID = models.AutoField(primary_key=True) 
-   Codigo = models.CharField(db_column='Codigo', max_length=50, blank=False, null=False)
+   Codigo = models.CharField(db_column='Codigo', max_length=50, default='NA', blank=True, null=True)
    IDProcedimiento = models.IntegerField(db_column='IDProcedimiento', blank=False, null=False)
    Descripcion = models.TextField(db_column='Descripcion')
 
@@ -87,7 +87,7 @@ class DescripcionesProcedimiento(models.Model):
 
 class SubDescripciones(models.Model):        
    ID = models.AutoField(primary_key=True) 
-   Codigo = models.CharField(db_column='Codigo', max_length=50, blank=False, null=False)
+   Codigo = models.CharField(db_column='Codigo', max_length=50, default='NA', blank=True, null=True)
    IDDescripcion = models.IntegerField(db_column='IDDescripcion', blank=True, null=True)
    SubDescripcion = models.TextField(db_column='SubDescripcion')
 

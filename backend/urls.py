@@ -106,7 +106,7 @@ class ProcedimientoView(viewsets.ViewSet):
     data['specificData'] = specificData
 
   if req.data['mode'] == 'CREATE':
-   columnsSchema = {'DocumentosReferencias':['IDDocumento'],'Responsabilidades':['Descripcion','IDPuesto'],'TerminologiasDef':['IDTermino','Descripcion'],'DescripcionesProcedimiento':['Descripcion'],'SubDescripciones':['SubDescripcion','IDDescripcion','Codigo'],'Anexos':['Codigo','Nombre','Num'],'RevAprobacion':[
+   columnsSchema = {'DocumentosReferencias':['IDDocumento'],'Responsabilidades':['Descripcion','IDPuesto'],'TerminologiasDef':['IDTermino','Descripcion'],'DescripcionesProcedimiento':['Descripcion'],'SubDescripciones':['SubDescripcion','IDDescripcion'],'Anexos':['Codigo','Nombre','Num'],'RevAprobacion':[
     'ElaboradoPor',
     'FirmaElaborado',
     'PuestoElaborado',
@@ -147,7 +147,7 @@ class ProcedimientoView(viewsets.ViewSet):
        if descripcionProcData['Descripcion'] in dataToProcess['SubDescripciones']:
         for correspondingSubDescrip in dataToProcess['SubDescripciones'][descripcionProcData['Descripcion']]:
          newSubDescrip = {}
-         newSubDescrip['Codigo'] = correspondingSubDescrip['Codigo']
+        #  newSubDescrip['Codigo'] = correspondingSubDescrip['Codigo']
          newSubDescrip['SubDescripcion'] = correspondingSubDescrip['SubDescripcion']
          newSubDescrip['IDDescripcion'] = descipProcId
         M.SubDescripciones.objects.create(**newSubDescrip)
@@ -648,19 +648,19 @@ class DescripcionProcedimientoView(viewsets.ViewSet):
    data = {'schema':self.fieldsSchema, 'relations':relationsData if relationsData else []}
   elif req.data['mode'] == 'create':
    fields = {}
-   fields['Codigo'] = req.data['data']['Codigo']
+  #  fields['Codigo'] = req.data['data']['Codigo']
    fields['Descripcion'] = req.data['data']['Descripcion']
    fields['IDProcedimiento'] = M.Procedimiento.objects.filter(Objetivo=req.data['data']['IDProcedimiento']).values('ID')[0]['ID'] if req.data['data']['IDProcedimiento'] else None
    M.DescripcionesProcedimiento.objects.create(**fields)   
   elif req.data['mode'] == 'requestUpdateData':
    obj = M.DescripcionesProcedimiento.objects.get(pk=req.data['ID']['current'])
    data = {}
-   data['Codigo'] = obj.Codigo
+  #  data['Codigo'] = obj.Codigo
    data['Descripcion'] = obj.Descripcion
    data['IDProcedimiento'] = obj.IDProcedimiento
   elif req.data['mode'] == 'update':
    fields = {}
-   fields['Codigo'] = req.data['data']['Codigo']
+  #  fields['Codigo'] = req.data['data']['Codigo']
    fields['Descripcion'] = req.data['data']['Descripcion']   
    fields['IDProcedimiento'] = M.Procedimiento.objects.filter(Objetivo=req.data['data']['IDProcedimiento']).values('ID')[0]['ID'] if req.data['data']['IDProcedimiento'] else None   
    updatedObj = M.DescripcionesProcedimiento(pk=req.data['data']['ID'],**fields)
@@ -689,7 +689,7 @@ class DescripcionProcedimientoView(viewsets.ViewSet):
 class SubDescripcionView(viewsets.ViewSet):
  
  fieldsSchema = {
-  'fields':[{'name':'Codigo', 'null':False, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
+  'fields':[{'name':'Codigo', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
             {'name':'IDDescripcion', 'null':True, 'maxLength':False, 'needsToBeUnique':False, 'type':'select'},
             {'name':'SubDescripcion', 'null':True, 'maxLength':9999, 'needsToBeUnique':False, 'type':'str'}]
  }
@@ -713,7 +713,7 @@ class SubDescripcionView(viewsets.ViewSet):
    data = {'schema':self.fieldsSchema, 'relations':relationsData if relationsData else []}
   elif req.data['mode'] == 'create':
    fields = {}
-   fields['Codigo'] = req.data['data']['Codigo']
+  #  fields['Codigo'] = req.data['data']['Codigo']
    fields['SubDescripcion'] = req.data['data']['SubDescripcion']
    fields['IDDescripcion'] = M.DescripcionesProcedimiento.objects.filter(Descripcion__iexact=req.data['data']['IDDescripcion'])
    fields['IDDescripcion'] = fields['IDDescripcion'].values()[0]['ID'] if req.data['data']['IDDescripcion'] and fields['IDDescripcion'] else None   
@@ -721,12 +721,12 @@ class SubDescripcionView(viewsets.ViewSet):
   elif req.data['mode'] == 'requestUpdateData':
    obj = M.SubDescripciones.objects.get(pk=req.data['ID']['current'])
    data = {}
-   data['Codigo'] = obj.Codigo
+  #  data['Codigo'] = obj.Codigo
    data['SubDescripcion'] = obj.SubDescripcion
    data['IDDescripcion'] = obj.IDDescripcion   
   elif req.data['mode'] == 'update':
    fields = {}
-   fields['Codigo'] = req.data['data']['Codigo']
+  #  fields['Codigo'] = req.data['data']['Codigo']
    fields['SubDescripcion'] = req.data['data']['SubDescripcion']   
    fields['IDDescripcion'] = M.DescripcionesProcedimiento.objects.filter(Descripcion=req.data['data']['IDDescripcion']).values('ID')[0]['ID'] if req.data['data']['IDDescripcion'] else None   
    updatedObj = M.SubDescripciones(pk=req.data['data']['ID'],**fields)
