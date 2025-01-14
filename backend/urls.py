@@ -467,8 +467,8 @@ class PuestoView(viewsets.ViewSet):
    if req.data['data']['Descripcion']:fields['Descripcion'] = req.data['data']['Descripcion']
    if req.data['data']['UnidadNegocio']:fields['UnidadNegocio'] = req.data['data']['UnidadNegocio']
    if req.data['data']['Actividad']:fields['Actividad'] = req.data['data']['Actividad']
-   M.Puestos.objects.create(**fields)
-   data = fields
+   createdObj = M.Puestos.objects.create(**fields)
+   return Response({'msg':'ok','ID':createdObj.pk,'Descripcion':createdObj.Descripcion})
   elif req.data['mode'] == 'requestUpdateData':
    obj = M.Puestos.objects.get(pk=req.data['ID']['current'])
    data = {}
@@ -594,7 +594,8 @@ class TerminoView(viewsets.ViewSet):
    fields = {}
    fields['Descripcion'] = req.data['data']['Descripcion']
    fields['DescripcionGeneral'] = req.data['data']['DescripcionGeneral']
-   M.Termino.objects.create(**fields)    
+   createdObj = M.Termino.objects.create(**fields)   
+   return Response({'msg':'ok','ID':createdObj.pk,'Descripcion':createdObj.Descripcion})    
   elif req.data['mode'] == 'requestUpdateData':
    obj = M.Termino.objects.get(pk=req.data['ID']['current'])
    data = {}
