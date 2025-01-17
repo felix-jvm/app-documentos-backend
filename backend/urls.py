@@ -354,13 +354,25 @@ class DocumentoView(viewsets.ViewSet):
    fields['Descripcion'] = req.data['data']['Descripcion']   
    updatedObj = M.Documentos(pk=req.data['data']['ID'],**fields)
    updatedObj.save()  
+  elif req.data['mode'] == 'deleteRecord': 
+   objToDel = M.Documentos.objects.filter(Codigo=req.data['documentCode'])
+   dependentProced = M.Procedimiento.objects.filter(Codigo=req.data['documentCode'])
+   if objToDel:objToDel[0].delete()
+   if dependentProced:
+    dependentProced = dependentProced[0]
+    dependentProced.Codigo = ''
+    dependentProced.deleted = True
+    dependentProced.save()
+    return Response({'status':'ok','message':'procedDependent'})
+   return Response({'status':'ok','message':False})
   return Response(json.dumps({'data':data}))
  
  def delete(self,req):
-  print('------->',req.data['ID'])
-  objToDelete = M.Documentos.objects.get(pk=req.data['ID'])
-  objToDelete.delete()
-  return Response({'response':'ok'}) 
+  pass
+  # print('------->',req.data['ID'])
+  # objToDelete = M.Documentos.objects.get(pk=req.data['ID'])
+  # objToDelete.delete()
+  # return Response({'response':'ok'}) 
  
  def list(self, req):
   data = {'columns':[{'title':'Código'},{'title':'Descripcion'},{'title':'Fecha'},{'title':'Versión'}],'records':[]}
