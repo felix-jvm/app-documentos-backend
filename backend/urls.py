@@ -344,16 +344,18 @@ class DocumentoView(viewsets.ViewSet):
    M.Documentos.objects.create(**fields)  
    
   elif req.data['mode'] == 'requestUpdateData':
-   obj = M.Documentos.objects.get(pk=req.data['ID']['current'])
+   obj = M.Documentos.objects.get(Codigo=req.data['ID']['current'])
    data = {}
    data['Codigo'] = obj.Codigo
    data['Descripcion'] = obj.Descripcion
+   data['Fecha'] = str(obj.Fecha)
+   data['Version'] = obj.Version      
   elif req.data['mode'] == 'update':
    fields = {}
    fields['Codigo'] = req.data['data']['Codigo']
    fields['Descripcion'] = req.data['data']['Descripcion']   
-   updatedObj = M.Documentos(pk=req.data['data']['ID'],**fields)
-   updatedObj.save()  
+   recordToUpdt = M.Documentos.objects.filter(Codigo=req.data['data']['ID'])
+   if recordToUpdt:recordToUpdt.update(**fields) 
   elif req.data['mode'] == 'deleteRecord': 
    objToDel = M.Documentos.objects.filter(Codigo=req.data['documentCode'])
    dependentProced = M.Procedimiento.objects.filter(Codigo=req.data['documentCode'])
@@ -482,7 +484,7 @@ class PuestoView(viewsets.ViewSet):
    createdObj = M.Puestos.objects.create(**fields)
    return Response({'msg':'ok','ID':createdObj.pk,'Descripcion':createdObj.Descripcion})
   elif req.data['mode'] == 'requestUpdateData':
-   obj = M.Puestos.objects.get(pk=req.data['ID']['current'])
+   obj = M.Puestos.objects.get(Descripcion=req.data['ID']['current'])
    data = {}
    data['Descripcion'] = obj.Descripcion
    data['UnidadNegocio'] = obj.UnidadNegocio
@@ -492,8 +494,8 @@ class PuestoView(viewsets.ViewSet):
    fields['UnidadNegocio'] = req.data['data']['UnidadNegocio']
    fields['Descripcion'] = req.data['data']['Descripcion']   
    fields['Actividad'] = req.data['data']['Actividad']
-   updatedObj = M.Puestos(pk=req.data['data']['ID'],**fields)
-   updatedObj.save()
+   recordToUpdt = M.Puestos.objects.filter(Descripcion=req.data['data']['ID'])
+   if recordToUpdt:recordToUpdt.update(**fields)
   return Response(json.dumps({'data':data}))
  
  def delete(self,req):
@@ -609,7 +611,7 @@ class TerminoView(viewsets.ViewSet):
    createdObj = M.Termino.objects.create(**fields)   
    return Response({'msg':'ok','ID':createdObj.pk,'Descripcion':createdObj.Descripcion})    
   elif req.data['mode'] == 'requestUpdateData':
-   obj = M.Termino.objects.get(pk=req.data['ID']['current'])
+   obj = M.Termino.objects.get(Descripcion=req.data['ID']['current'])
    data = {}
    data['Descripcion'] = obj.Descripcion
    data['DescripcionGeneral'] = obj.DescripcionGeneral   
@@ -617,8 +619,8 @@ class TerminoView(viewsets.ViewSet):
    fields = {}
    fields['Descripcion'] = req.data['data']['Descripcion']   
    fields['DescripcionGeneral'] = req.data['data']['DescripcionGeneral']
-   updatedObj = M.Termino(pk=req.data['data']['ID'],**fields)
-   updatedObj.save()
+   recordToUpdt = M.Termino.objects.filter(Descripcion=req.data['data']['ID'])
+   if recordToUpdt:recordToUpdt.update(**fields)
   return Response(json.dumps({'data':data}))
  
  def list(self, req):

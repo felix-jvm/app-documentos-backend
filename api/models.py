@@ -49,8 +49,8 @@ class Responsabilidades(models.Model):
 class Puestos(models.Model):        
    ID = models.AutoField(primary_key=True) 
    Descripcion = models.CharField(db_column='Descripcion', max_length=50, blank=False, null=False)
-   UnidadNegocio = models.IntegerField(db_column='UnidadNegocio', blank=True, null=True)
-   Actividad = models.IntegerField(db_column='Actividad', blank=True, null=True)
+   UnidadNegocio = models.CharField(db_column='UnidadNegocio', max_length=10, blank=True, null=True)
+   Actividad = models.CharField(db_column='Actividad',max_length=10, blank=True, null=True)
 
    class Meta:
         managed = True
