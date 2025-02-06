@@ -179,3 +179,187 @@ class UsuarioCodigo(models.Model):
     class Meta:
         managed = True
         db_table = 'UsuarioCodigo'        
+
+
+#############################################DESCRIP_PUESTO###################################
+
+
+class DescripcionPuesto(models.Model):
+    ID = models.AutoField(primary_key=True)
+    CodigoPuesto = models.IntegerField(db_column='CodigoPuesto', blank=True, null=True)
+    TituloPuesto = models.IntegerField(db_column='TituloPuesto', blank=True, null=True)
+    ReportaA = models.IntegerField(db_column='ReportaA', blank=True, null=True)
+    Departamento = models.IntegerField(db_column='Departamento', blank=True, null=True)
+    CodigoDepartamento = models.CharField(db_column='CodigoDepartamento', max_length=50, blank=True, null=True)
+    Ubicacion = models.CharField(db_column='Ubicacion', max_length=50, blank=True, null=True)
+    ObjetivoPuesto = models.CharField(db_column='ObjetivoPuesto', max_length=500, blank=True, null=True)
+    OrganigramaDescri = models.CharField(db_column='OrganigramaDescri', max_length=500, blank=True, null=True)
+    OrganigramaFile = models.BinaryField(db_column='OrganigramaFile', blank=True, null=True)
+    CompeteActituDescr = models.CharField(db_column='CompeteActituDescr', max_length=500, blank=True, null=True)
+    CompeteTecniIndisDescr = models.CharField(db_column='CompeteTecniIndisDescr', max_length=500, blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'DescripcionPuesto'
+
+class FuncionesPuesto(models.Model):
+    ID = models.AutoField(primary_key=True)
+    FuncionesDescri = models.CharField(db_column='FuncionesDescri', max_length=500, blank=True, null=True)
+    ResultadoFinalDescri = models.CharField(db_column='ResultadoFinalDescri', max_length=500, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'FuncionesPuesto'
+
+class ActividadesPeriodicasPuesto(models.Model):
+    ID = models.AutoField(primary_key=True)
+    ActividadesDescri = models.CharField(db_column='ActividadesDescri', max_length=500, blank=True, null=True)
+    ResultadoFinalDescri = models.CharField(db_column='ResultadoFinalDescri', max_length=500, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ActividadesPeriodicasPuesto'
+
+class RelacionesInternas(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Puesto = models.IntegerField(db_column='Puesto', blank=True, null=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'RelacionesInternas'        
+
+class RelacionesExternas(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Puesto = models.IntegerField(db_column='Puesto', blank=True, null=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'RelacionesExternas'        
+
+class ResponRecurYMateriales(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ResponRecurYMateriales'        
+
+class DecisionesSinAprobacion(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'DecisionesSinAprobacion'
+
+class GradoAutoridadDecisiones(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'GradoAutoridadDecisiones'
+
+class FormacionAcademica(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=300, blank=True, null=True)
+    Indispensable = models.BooleanField(db_column='Indispensable', default=False, blank=True, null=True)  
+    Deseable = models.BooleanField(db_column='Deseable', default=False, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'FormacionAcademica'
+
+class Idiomas(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=300, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'Idiomas'        
+
+class IdiomasHabilidades(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=50, blank=True, null=True)
+    Grado =  models.CharField(db_column='Grado', max_length=10, blank=True, null=True)
+    Indispensable = models.BooleanField(db_column='Indispensable', default=False, blank=True, null=True)  
+    Deseable = models.BooleanField(db_column='Deseable', default=False, blank=True, null=True)
+    Idiomas = models.IntegerField(db_column='Idiomas', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'IdiomasHabilidades'
+
+class Computacion(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=300, blank=True, null=True)
+    Grado =  models.CharField(db_column='Grado', max_length=10, blank=True, null=True)
+    Indispensable = models.BooleanField(db_column='Indispensable', default=False, blank=True, null=True)  
+    Deseable = models.BooleanField(db_column='Deseable', default=False, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'Computacion'        
+
+class ExperienciaIdeal(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=300, blank=True, null=True)
+    Indispensable = models.BooleanField(db_column='Indispensable', default=False, blank=True, null=True)  
+    Deseable = models.BooleanField(db_column='Deseable', default=False, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ExperienciaIdeal'        
+
+class CompeteActituLista(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=300, blank=True, null=True)
+    Indispensable = models.BooleanField(db_column='Indispensable', default=False, blank=True, null=True)  
+    Deseable = models.BooleanField(db_column='Deseable', default=False, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'CompeteActituLista'
+
+class CompeteTecniIndisLista(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=300, blank=True, null=True)
+    BuenDominio = models.BooleanField(db_column='BuenDominio', default=False, blank=True, null=True)  
+    DominioBasico = models.BooleanField(db_column='DominioBasico', default=False, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'CompeteTecniIndisLista'    
+
+class CondicionesFisicas(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=300, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'CondicionesFisicas'
+
+class Riesgos(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=300, blank=True, null=True)
+    DescripcionPuesto = models.IntegerField(db_column='DescripcionPuesto', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'Riesgos'
