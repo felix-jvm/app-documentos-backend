@@ -11,6 +11,7 @@ from django.conf import settings
 from datetime import datetime
 import api.models as M
 import bcrypt
+import magic
 import json
 import os
 import io
@@ -209,13 +210,13 @@ class ProcedimientoView(viewsets.ViewSet):
    jointRecord.append(procedRecord['Objetivo'])
    if jointRecord[0]:
     docRecord = list(M.Documentos.objects.filter(Codigo=jointRecord[0]))
-    print('----------------xxx>',jointRecord[0],len(jointRecord[0]))
+    print('----------------xxxxxxxx>',jointRecord[0],len(jointRecord[0]))
     if docRecord:
      jointRecord.append(docRecord[0].Descripcion)
      jointRecord.append(docRecord[0].Fecha)
      jointRecord.append(docRecord[0].Version)
    proceData['records'].append(jointRecord)
-
+  print('----------------------->',proceData['records'])
   return Response(proceData)
   
   # data = serializers.serialize('json',M.Procedimiento.objects.all())
@@ -505,7 +506,7 @@ class PuestoView(viewsets.ViewSet):
   return Response({'response':'ok'}) 
 
  def list(self, req):
-  data = {'columns':[{'title':'Descripcion'},{'title':'UnidadNegocio'},{'title':'Actividad'}],'records':[]}
+  data = {'columns':[{'title':'Descripcion'},{'title':'Unidad Negocio'},{'title':'Actividad'}],'records':[]}
   unparsedData = list(M.Puestos.objects.all().values('Descripcion','UnidadNegocio','Actividad'))
   for unparsedRecord in unparsedData:
    data['records'].append(unparsedRecord.values())
@@ -1015,6 +1016,111 @@ class UsuarioView(viewsets.ViewSet):
     hashedPass = record.Contrasena.tobytes()
     if bcrypt.checkpw(password.encode('utf-8'),hashedPass):return Response({'Nombre':record.Nombre,'Activo':record.Activo,'PermisoNivel':record.PermisoNivel,'msg':'ok'})
   return Response([])
+ 
+class PuestoDescripcionView(viewsets.ViewSet): 
+ 
+ def list(self,req):
+  puestoDescriModelRecords = M.DescripcionPuesto.objects.all().values('ID','CodigoPuesto','TituloPuesto','ReportaA','Departamento','Ubicacion')
+  payload = {'columns':[{'title':'Codigo Puesto'},{'title':'Titulo Puesto'},{'title':'Reporta a'},{'title':'Departamento'},{'title':'Ubicacion'}],'records':[]}
+  for record in puestoDescriModelRecords:
+   puestoDescriModelRecord = []
+   documentoRel = M.Documentos.objects.filter(pk=record['CodigoPuesto']).values('Codigo')
+   puestoRel = M.Puestos.objects.filter(pk=record['TituloPuesto']).values('Descripcion')
+   reportaAPuestoRel = M.Puestos.objects.filter(pk=record['ReportaA']).values('Descripcion')
+   departamentoRel = M.Departamento.objects.filter(pk=record['Departamento']).values('Codigo','Descripcion')   
+   puestoDescriModelRecord.append(documentoRel[0]['Codigo'] if documentoRel else '')
+   puestoDescriModelRecord.append(puestoRel[0]['Descripcion'] if puestoRel else '')
+   puestoDescriModelRecord.append(reportaAPuestoRel[0]['Descripcion'] if reportaAPuestoRel else '')
+   puestoDescriModelRecord.append('%s - %s'%(departamentoRel[0]['Codigo'],departamentoRel[0]['Descripcion']) if departamentoRel else '')
+   puestoDescriModelRecord.append(record['Ubicacion'])
+   payload['records'].append(puestoDescriModelRecord)
+  return Response(payload)
+
+ def create(self,req): 
+  if req.data['mode'] == 'savePuestoDescriRecord':
+   puestoDescri = ''
+   if 'puestoDescriCode' in req.data['payload'].keys():
+    documentoPk = M.Documentos.objects.filter(Codigo=req.data['payload']['puestoDescriCode']).values('ID')
+    puestoDescri = M.DescripcionPuesto.objects.filter(CodigoPuesto=documentoPk[0]['ID']) if documentoPk else ''
+    puestoDescri.update(**req.data['payload']['DescripcionPuesto'])
+   else:
+    puestoDescri = M.DescripcionPuesto.objects.create(**req.data['payload']['DescripcionPuesto'])
+   for dataTable in req.data['payload'].keys():    
+    if dataTable in ['puestoDescriCode','DescripcionPuesto','RevAprobacion','historialCambios','recordsToDelete']:continue
+    for dataTableRecord in req.data['payload'][dataTable]:
+     cleanedRecord = dataTableRecord    
+     if 'elementHtml' in cleanedRecord.keys():cleanedRecord.pop('elementHtml')
+     cleanedRecord['DescripcionPuesto'] = puestoDescri[0].pk if 'puestoDescriCode' in req.data['payload'].keys() else puestoDescri.pk
+     eval('M.%s'%(dataTable)).objects.create(**cleanedRecord)     
+    for record in req.data['payload']['recordsToDelete']:
+     if record.keys():
+      tableName = list(record.keys())[0]
+      recordToDelete = eval('M.%s'%(tableName)).objects.filter(pk=record[tableName])
+      print('----------------------------------xxxxx>',recordToDelete)           
+      if recordToDelete:
+       recordToDelete[0].delete() 
+   return Response({'msg':'ok'})       
+  if req.data['mode'] == 'save_ficha_tecnica':
+   recordToUpdate = M.DescripcionPuesto.objects.filter(CodigoPuesto=req.data['puestoDescriCode'])
+   if recordToUpdate and type(req.data['file']) != str:
+    recordToUpdate[0].OrganigramaFile = req.data['file'].read()
+    recordToUpdate[0].save()   
+  if req.data['mode'] == 'request_ficha_tecnica':
+   documentoPk = M.Documentos.objects.filter(Codigo=req.data['puestoDescriCode']).values('ID')
+   puestoDescri = M.DescripcionPuesto.objects.filter(CodigoPuesto=documentoPk[0]['ID']) if documentoPk else ''
+   if puestoDescri:
+     file = bytes(puestoDescri[0].OrganigramaFile)
+     mime = magic.Magic(mime=True)
+     tipo_mime = mime.from_buffer(file)    
+     return HttpResponse(file,content_type=tipo_mime)
+   return Response([])  
+  if req.data['mode'] == 'fillForm':
+   puestoRecords = M.Puestos.objects.all().values('ID','Descripcion')
+   departRecords = M.Departamento.objects.all().values('ID','Descripcion','Codigo')
+   docuRecords = list(M.Documentos.objects.filter(Codigo__contains='PEP').exclude(
+    Codigo__in=M.Documentos.objects.filter(pk__in=[M.DescripcionPuesto.objects.all().values('CodigoPuesto')]).values('Codigo')
+    ).values('ID','Codigo','Descripcion'))
+   payload = {}
+   payload['Identificacion_CodigoPuesto'] = docuRecords
+   payload['Identificacion_TituloPuesto'] = puestoRecords
+   payload['Identificacion_ReportaA'] = puestoRecords
+   payload['Identificacion_Departamento'] = departRecords
+   payload['RelacionesInternas_PuestoSelectID'] = puestoRecords
+   payload['RelacionesExternas_PuestoSelectID'] = puestoRecords
+   if 'puestoDescriCode' in req.data.keys():   
+    selfDocumentCode = list(M.Documentos.objects.filter(Codigo=req.data['puestoDescriCode']).values('ID','Codigo','Descripcion'))
+    documentoPk = selfDocumentCode[0]['ID'] if selfDocumentCode else ''
+    payload['Identificacion_CodigoPuesto'].extend(selfDocumentCode)
+    if documentoPk:
+     tempObj = {}
+     descripcionPuestoPk = ''
+    #  pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None:[{newColumnName:fkRecord} for fkRecord in eval('M.%s'%(fkTable)).objects.filter(pk=record[targetColumn]).values(fkColumn) for record in targetTable]
+     pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None: [
+     {**record, newColumnName: fkRecord['Descripcion']}
+     for record in targetTable
+     for fkRecord in eval('M.%s' % fkTable).objects.filter(pk=record[targetColumn]).values(fkColumn)
+     ]       
+     recordsRenombrator = lambda newColumnNames=None, targetTable=None:[dict(zip(newColumnNames, record.values())) for record in targetTable]
+     tempObj['DescripcionPuesto'] = M.DescripcionPuesto.objects.filter(CodigoPuesto=documentoPk).values('ID','CodigoPuesto','TituloPuesto','ReportaA',
+     'Departamento','CodigoDepartamento','Ubicacion','ObjetivoPuesto','OrganigramaDescri','CompeteActituDescr','CompeteTecniIndisDescr')    
+     descripcionPuestoPk = tempObj['DescripcionPuesto'][0]['ID']
+     tempObj['ActividadesPeriodicasPuesto'] = recordsRenombrator(targetTable=M.ActividadesPeriodicasPuesto.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','ActividadesDescri','ResultadoFinalDescri'),newColumnNames=['ID','Actividad','Resultado final'])
+     tempObj['CompeteActituLista'] = recordsRenombrator(targetTable=M.CompeteActituLista.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri','Indispensable','Deseable'),newColumnNames=['ID','Competencias Actitudinales','Grado Indispensable','Deseable'])
+     tempObj['CompeteTecniIndisLista'] = recordsRenombrator(targetTable=M.CompeteTecniIndisLista.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri','BuenDominio','DominioBasico'),newColumnNames=['ID','Indispensables para ocupar la posición','Buen Dominio','Dominio Básico'])
+     tempObj['Computacion'] = recordsRenombrator(targetTable=M.Computacion.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri','Grado','Indispensable','Deseable'),newColumnNames=['ID','Programa Tecnológico','Grado','Indispensable','Deseable'])     
+     tempObj['CondicionesFisicas'] = recordsRenombrator(targetTable=M.CondicionesFisicas.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri'),newColumnNames=['ID','Descripción'])
+     tempObj['DecisionesSinAprobacion'] = recordsRenombrator(targetTable=M.DecisionesSinAprobacion.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri'),newColumnNames=['ID','Descripción'])
+     tempObj['ExperienciaIdeal'] = recordsRenombrator(targetTable=M.ExperienciaIdeal.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri','Indispensable','Deseable'),newColumnNames=['ID','Experiencia','Indispensable','Deseable'])
+     tempObj['FormacionAcademica'] = recordsRenombrator(targetTable=M.FormacionAcademica.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri','Indispensable','Deseable'),newColumnNames=['ID','Nivel educativo','Indispensable','Deseable'])
+     tempObj['FuncionesPuesto'] = recordsRenombrator(targetTable=M.FuncionesPuesto.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','FuncionesDescri','ResultadoFinalDescri'),newColumnNames=['ID','Función','Resultado final'])
+     tempObj['GradoAutoridadDecisiones'] = recordsRenombrator(targetTable=M.GradoAutoridadDecisiones.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri'),newColumnNames=['ID','Descripción'])
+     tempObj['RelacionesExternas'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.RelacionesExternas.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Puesto','Descri'), fkTable='Puestos', targetColumn='Puesto', fkColumn='Descripcion', newColumnName='Puesto'),newColumnNames=['ID','Puesto','Descripción'])
+     tempObj['RelacionesInternas'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.RelacionesInternas.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Puesto','Descri'), fkTable='Puestos', targetColumn='Puesto', fkColumn='Descripcion', newColumnName='Puesto'),newColumnNames=['ID','Puesto','Descripción'])
+     tempObj['ResponRecurYMateriales'] = recordsRenombrator(targetTable=M.ResponRecurYMateriales.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri'),newColumnNames=['ID','Recurso o material'])
+     tempObj['Riesgos'] = recordsRenombrator(targetTable=M.Riesgos.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri'),newColumnNames=['ID','Descripción'])
+     payload['specificData'] = {**tempObj}
+   return Response({'msg':'ok','payload':payload})
+  return Response({}) 
 
 router = DefaultRouter()
 
@@ -1043,5 +1149,7 @@ router.register(r'revaprobacion', RevAprobacionView, basename='revaprobacion')
 router.register(r'historialcambios', HistorialCambioView, basename='historialcambio')
 
 router.register(r'usuario', UsuarioView, basename='usuario')
+
+router.register(r'puestodescripcion', PuestoDescripcionView, basename='puestodescripcion')
 
 urlpatterns = router.urls + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
