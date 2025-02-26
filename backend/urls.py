@@ -1046,12 +1046,12 @@ class PuestoDescripcionView(viewsets.ViewSet):
    else:
     puestoDescri = M.DescripcionPuesto.objects.create(**req.data['payload']['DescripcionPuesto'])
    for dataTable in req.data['payload'].keys():    
-    if dataTable in ['puestoDescriCode','DescripcionPuesto','RevAprobacion','historialCambios','recordsToDelete']:continue
+    if dataTable in ['puestoDescriCode','DescripcionPuesto','RevAprobacion','historialCambios','Idiomas','recordsToDelete']:continue
     for dataTableRecord in req.data['payload'][dataTable]:
      cleanedRecord = dataTableRecord    
      if 'elementHtml' in cleanedRecord.keys():cleanedRecord.pop('elementHtml')
      cleanedRecord['DescripcionPuesto'] = puestoDescri[0].pk if 'puestoDescriCode' in req.data['payload'].keys() else puestoDescri.pk
-     eval('M.%s'%(dataTable)).objects.create(**cleanedRecord)     
+     eval('M.%s'%(dataTable)).objects.create(**cleanedRecord)
     for record in req.data['payload']['recordsToDelete']:
      if record.keys():
       tableName = list(record.keys())[0]
@@ -1059,6 +1059,27 @@ class PuestoDescripcionView(viewsets.ViewSet):
       print('----------------------------------xxxxx>',recordToDelete)           
       if recordToDelete:
        recordToDelete[0].delete() 
+   if req.data['payload']['Idiomas']:
+    puestoDescri = puestoDescri[0].pk if 'puestoDescriCode' in req.data['payload'].keys() else puestoDescri.pk    
+    for idioma in req.data['payload']['Idiomas'].keys():
+     dbStoredIdioma = M.Idiomas.objects.filter(Descri=idioma)
+     if not dbStoredIdioma:
+      dbStoredIdioma = {'Descri':idioma,'DescripcionPuesto':puestoDescri}
+      dbStoredIdioma = M.Idiomas.objects.create(**dbStoredIdioma)
+     else:
+      dbStoredIdioma = dbStoredIdioma[0]
+     idiomaLinkedSkills = M.IdiomasHabilidades.objects.filter(Idiomas=dbStoredIdioma.pk)
+     if not idiomaLinkedSkills:
+      M.IdiomasHabilidades.objects.create(**{'Descri':'Leer','Idiomas':dbStoredIdioma.pk})
+      M.IdiomasHabilidades.objects.create(**{'Descri':'Hablar','Idiomas':dbStoredIdioma.pk})
+      M.IdiomasHabilidades.objects.create(**{'Descri':'Escribir','Idiomas':dbStoredIdioma.pk})
+     for idiomaSkills in req.data['payload']['Idiomas'][idioma].keys():
+      idiomaLinkedSkills = M.IdiomasHabilidades.objects.filter(Idiomas=dbStoredIdioma.pk)
+      for idiomaSkillsValues in req.data['payload']['Idiomas'][idioma][idiomaSkills]:
+       specificSkillToUpdt = idiomaLinkedSkills.filter(Descri=idiomaSkills)
+       updtData = req.data['payload']['Idiomas'][idioma][idiomaSkills]
+       if specificSkillToUpdt:specificSkillToUpdt.update(**updtData)
+       print('---------------------->',req.data['payload']['Idiomas'][idioma][idiomaSkills])
    return Response({'msg':'ok'})       
   if req.data['mode'] == 'save_ficha_tecnica':
    recordToUpdate = M.DescripcionPuesto.objects.filter(CodigoPuesto=req.data['puestoDescriCode'])
@@ -1094,7 +1115,6 @@ class PuestoDescripcionView(viewsets.ViewSet):
     if documentoPk:
      tempObj = {}
      descripcionPuestoPk = ''
-    #  pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None:[{newColumnName:fkRecord} for fkRecord in eval('M.%s'%(fkTable)).objects.filter(pk=record[targetColumn]).values(fkColumn) for record in targetTable]
      pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None: [
      {**record, newColumnName: fkRecord['Descripcion']}
      for record in targetTable
@@ -1118,6 +1138,17 @@ class PuestoDescripcionView(viewsets.ViewSet):
      tempObj['RelacionesInternas'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.RelacionesInternas.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Puesto','Descri'), fkTable='Puestos', targetColumn='Puesto', fkColumn='Descripcion', newColumnName='Puesto'),newColumnNames=['ID','Puesto','Descripción'])
      tempObj['ResponRecurYMateriales'] = recordsRenombrator(targetTable=M.ResponRecurYMateriales.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri'),newColumnNames=['ID','Recurso o material'])
      tempObj['Riesgos'] = recordsRenombrator(targetTable=M.Riesgos.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri'),newColumnNames=['ID','Descripción'])
+     tempObj['Idiomas'] = {}
+
+     puestoDescriIdiomas = M.Idiomas.objects.filter(DescripcionPuesto=descripcionPuestoPk).values('ID','Descri')
+     for idioma in puestoDescriIdiomas:
+      idiomaValue = idioma['Descri']
+      tempObj['Idiomas'][idiomaValue] = {}
+      idiomaLinkedSkills = M.IdiomasHabilidades.objects.filter(Idiomas=idioma['ID']).values('Grado','Indispensable','Deseable')
+      if idiomaLinkedSkills:
+       tempObj['Idiomas'][idiomaValue]['Leer'] = idiomaLinkedSkills.filter(Descri='Leer')[0]
+       tempObj['Idiomas'][idiomaValue]['Hablar'] = idiomaLinkedSkills.filter(Descri='Hablar')[0]
+       tempObj['Idiomas'][idiomaValue]['Escribir'] = idiomaLinkedSkills.filter(Descri='Escribir')[0]
      payload['specificData'] = {**tempObj}
    return Response({'msg':'ok','payload':payload})
   return Response({}) 
