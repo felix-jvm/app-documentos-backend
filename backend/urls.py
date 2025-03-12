@@ -327,7 +327,6 @@ class DocumentoView(viewsets.ViewSet):
    return Response(highestSequence)
 
   elif req.data['mode'] == 'create':
-   
    fields = {}
    IDDepartamento = req.data['data']['sequence'].split('-')[1].strip().replace(' ','')
    IDTipoDocumento = req.data['data']['sequence'].split('-')[0].strip().replace(' ','')
@@ -1153,6 +1152,210 @@ class PuestoDescripcionView(viewsets.ViewSet):
    return Response({'msg':'ok','payload':payload})
   return Response({}) 
 
+class ManualView(viewsets.ViewSet):
+ 
+ def list(self,req):
+  manualRecords = M.Manual.objects.all().values('CodigoManual','ObjetivoGeneralManualDescri','AlcanceDescri')
+  parsedManualRecords = []
+  for record in manualRecords:
+   codigoManual = M.Documentos.objects.filter(pk=record['CodigoManual']).values('Codigo')
+   codigoManual = codigoManual[0]['Codigo'] if codigoManual else ''
+   parsedManualRecords.append([codigoManual,record['ObjetivoGeneralManualDescri'],record['AlcanceDescri']])
+  return Response({'columns':[{'title':'Código manual'},{'title':'Objetivo general del manual'},{'title':'Alcance'}],'records':parsedManualRecords})
+
+ def create(self,req):
+  if req.data['mode'] == 'fillForm':
+   docuRecords = list(M.Documentos.objects.filter(Codigo__contains='MAN').exclude(
+    Codigo__in=M.Documentos.objects.filter(pk__in=[M.Manual.objects.all().values('CodigoManual')]).values('Codigo')
+    ).values('ID','Codigo','Descripcion'))
+   pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None: [
+    {**record, newColumnName: fkRecord[fkColumn]}
+    for record in targetTable
+    for fkRecord in eval('M.%s' % fkTable).objects.filter(pk=record[targetColumn]).values(fkColumn)] 
+   payload = {}
+   parsedPuestoRecords = []   
+   payload['ObjetivoGeneralManual_Codigo'] = docuRecords
+   payload['BoundManualesManual'] = pkTranslator(targetTable=M.Manual.objects.all().values('ID','CodigoManual','ObjetivoGeneralManualDescri'),
+     fkTable='Documentos',targetColumn='CodigoManual',fkColumn='Codigo',newColumnName='Codigo')
+   payload['BoundProcedimiento'] = M.Procedimiento.objects.all().values('ID','Codigo','Objetivo')      
+   payload['DescripcionesPuesto_puestoSelect'] = pkTranslator(targetTable=M.DescripcionPuesto.objects.all().values('ID','CodigoPuesto','TituloPuesto'),
+     fkTable='Documentos',targetColumn='CodigoPuesto',fkColumn='Codigo',newColumnName='CodigoPuesto')
+   for record in payload['DescripcionesPuesto_puestoSelect']:
+    parsedPuestoRecords.extend(pkTranslator(targetTable=[record],fkTable='Puestos',targetColumn='TituloPuesto',fkColumn='Descripcion',newColumnName='TituloPuesto'))
+   payload['DescripcionesPuesto_puestoSelect'] = parsedPuestoRecords 
+
+   if 'manualCode' in req.data.keys():   
+    selfDocumentCode = list(M.Documentos.objects.filter(Codigo=req.data['manualCode']).values('ID','Codigo','Descripcion'))
+    documentoPk = selfDocumentCode[0]['ID'] if selfDocumentCode else ''
+    payload['ObjetivoGeneralManual_Codigo'].extend(selfDocumentCode)
+    if documentoPk:
+     tempObj = {}
+     manualPk = ''
+     pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None: [
+     {**record, newColumnName: fkRecord['Descripcion']}
+     for record in targetTable
+     for fkRecord in eval('M.%s' % fkTable).objects.filter(pk=record[targetColumn]).values(fkColumn)
+     ]
+     recordsRenombrator = lambda newColumnNames=None, targetTable=None:[dict(zip(newColumnNames, record.values())) for record in targetTable]
+     tempObj['Manual'] = M.Manual.objects.filter(CodigoManual=documentoPk).values('ID','CodigoManual','ObjetivoGeneralManualDescri','ObjetivoEspecificoManualDescri','AlcanceDescri',
+     'ObjetivoGeneralUnidadNegocio','MapaProcesoDescri','EstructuraProcesoDescri','OrganigramaEstructuralDescri','OrganigramaFuncionalDescri','PresupuestoDescri','PresupuestoSecondDescri',
+     'RendicionCuentaDescri','IndicadorProcesoGestionRiesgoDescri')    
+     tempObj['Manual'] = tempObj['Manual'][0] if tempObj['Manual'] else ''
+     manualPk = tempObj['Manual']['ID']
+     tempObj['ObjetivoEspecificoManualLista'] = recordsRenombrator(targetTable=M.ObjetivoEspecificoManualLista.objects.filter(Manual=manualPk).values('ID','Descri'),newColumnNames=['ID','Objetivo'])
+     tempObj['MarcoLegal'] = recordsRenombrator(targetTable=M.MarcoLegal.objects.filter(Manual=manualPk).values('ID','Descri'),newColumnNames=['ID','Marco legal y regulatorio'])
+     tempObj['ObjetivoEspecificoUnidadNegocio'] = recordsRenombrator(targetTable=M.ObjetivoEspecificoUnidadNegocio.objects.filter(Manual=manualPk).values('ID','Descri'),newColumnNames=['ID','Objetivo específico'])     
+     tempObj['DescripcionPuestoManual'] = recordsRenombrator(targetTable=M.DescripcionPuestoManual.objects.filter(Manual=manualPk).values('ID','Codigo','Descri'),newColumnNames=['ID','Codificación Interna','Descripción de puesto'])
+     tempObj['ClienteInterno'] = recordsRenombrator(targetTable=M.ClienteInterno.objects.filter(Manual=manualPk).values('ID','Cliente','Necesidad','Expectativa'),newColumnNames=['ID','Cliente','Necesidad','Expectativa'])
+     tempObj['ClienteExterno'] = recordsRenombrator(targetTable=M.ClienteExterno.objects.filter(Manual=manualPk).values('ID','Cliente','Necesidad','Expectativa'),newColumnNames=['ID','Cliente','Necesidad','Expectativa'])
+     tempObj['ComunicacionInterna'] = recordsRenombrator(targetTable=M.ComunicacionInterna.objects.filter(Manual=manualPk).values('ID','Periodicidad','TipoComunicacion'),newColumnNames=['ID','Periodicidad','Tipo de comunicación'])
+     tempObj['ComunicacionExterna'] = recordsRenombrator(targetTable=M.ComunicacionExterna.objects.filter(Manual=manualPk).values('ID','Periodicidad','TipoComunicacion'),newColumnNames=['ID','Periodicidad','Tipo de comunicación'])
+     tempObj['CategorizacionGasto'] = recordsRenombrator(targetTable=M.CategorizacionGasto.objects.filter(Manual=manualPk).values('ID','Descri','Sigla'),newColumnNames=['ID','Descripción','Sigla'])
+     tempObj['CategorizacionGastoPartida'] = M.CategorizacionGastoPartida.objects.filter(Manual=manualPk).values('ID','Descri','Sigla')
+     tempObj['BoundManual'] = recordsRenombrator(targetTable=M.BoundManual.objects.filter(Manual=manualPk).values('ID','Codigo','Descri'),newColumnNames=['ID','Nomenclatura','Referencia del documento'])
+     tempObj['BoundProcedimiento'] = recordsRenombrator(targetTable=M.BoundProcedimiento.objects.filter(Manual=manualPk).values('ID','Codigo','Descri'),newColumnNames=['ID','Nomenclatura','Referencia del documento'])
+     tempObj['RendicionCuentaLista'] = recordsRenombrator(targetTable=M.RendicionCuentaLista.objects.filter(Manual=manualPk).values('ID','Descri'),newColumnNames=['ID','Elemento'])
+
+     associatedGastoPartidaRecords = []
+     for record in tempObj['CategorizacionGasto']:
+      associatedGastoPartidaRecords.extend(tempObj['CategorizacionGastoPartida'].filter(CategorizacionGasto=record['ID']))
+     if associatedGastoPartidaRecords:
+      tempObj['CategorizacionGastoPartida'] = recordsRenombrator(targetTable=associatedGastoPartidaRecords,newColumnNames=['ID','Descripción','Sigla'])
+
+     payload['specificData'] = {**tempObj}
+   return Response({'msg':'ok','payload':payload})
+
+  if req.data['mode'] == 'saveManualRecord':
+   manual = ''
+   if 'CodigoManual' in req.data['payload'].keys():
+    documentoPk = M.Documentos.objects.filter(Codigo=req.data['payload']['CodigoManual']).values('ID')
+    manual = M.Manual.objects.filter(CodigoManual=documentoPk[0]['ID']) if documentoPk else ''
+    manual.update(**req.data['payload']['Manual'])
+   else:
+    manual = M.Manual.objects.create(**req.data['payload']['Manual'])
+   for dataTable in req.data['payload'].keys():    
+    if dataTable in ['CodigoManual','Manual','CategorizacionGastoPartida','RevAprobacion','historialCambios','recordsToDelete']:continue
+    for dataTableRecord in req.data['payload'][dataTable]:
+     cleanedRecord = dataTableRecord
+     print('----------------------------------xxxxx>',dataTableRecord)     
+     if 'elementHtml' in cleanedRecord.keys():cleanedRecord.pop('elementHtml')
+     cleanedRecord['Manual'] = manual[0].pk if 'CodigoManual' in req.data['payload'].keys() else manual.pk
+     eval('M.%s'%(dataTable)).objects.create(**cleanedRecord)
+    for record in req.data['payload']['recordsToDelete']:
+     if record.keys():
+      tableName = list(record.keys())[0]
+      recordToDelete = eval('M.%s'%(tableName)).objects.filter(pk=record[tableName])
+      print('----------------------------------xxxxx>',recordToDelete)           
+      if recordToDelete:
+       recordToDelete[0].delete() 
+   
+   if req.data['payload']['CategorizacionGastoPartida']:
+    for record in req.data['payload']['CategorizacionGastoPartida']:        
+     cleanedCategGastoPartRecord = dict(record)
+     if 'elementHtml' in cleanedCategGastoPartRecord.keys():cleanedCategGastoPartRecord.pop('elementHtml')     
+     if 'parentCategObj' in cleanedCategGastoPartRecord.keys():cleanedCategGastoPartRecord.pop('parentCategObj')     
+     if 'parentCategObj' in record.keys():
+      parentCategObjId = ''
+      checkParentCategObjExists = M.CategorizacionGasto.objects.filter(Sigla=record['parentCategObj']['Sigla']).values('ID')
+      if checkParentCategObjExists:
+       parentCategObjId = checkParentCategObjExists[0]['ID']
+      else:
+       parentCategObj = {**record['parentCategObj'],'Manual':manual[0].pk if 'CodigoManual' in req.data['payload'].keys() else manual.pk}
+       parentCategObjId = M.CategorizacionGasto.objects.create(**parentCategObj)
+       parentCategObjId = parentCategObjId.ID
+      cleanedCategGastoPartRecord['CategorizacionGasto'] = parentCategObjId
+      cleanedCategGastoPartRecord['Manual'] = manual[0].pk if 'CodigoManual' in req.data['payload'].keys() else manual.pk
+      M.CategorizacionGastoPartida.objects.create(**cleanedCategGastoPartRecord) 
+
+  if req.data['mode'] == 'save_mapaProcesoFile':   
+   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if recordToUpdate and type(req.data['file']) != str:
+    print('--------------.>>',req.data['mode'])   
+    recordToUpdate[0].MapaProcesoFile = req.data['file'].read()
+    recordToUpdate[0].save()
+  if req.data['mode'] == 'save_estructuraProcesoFile':
+   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if recordToUpdate and type(req.data['file']) != str:
+    print('--------------.>>',req.data['mode'])   
+    recordToUpdate[0].EstructuraProcesoFile = req.data['file'].read()
+    recordToUpdate[0].save()
+  if req.data['mode'] == 'save_organigramaEstructuralFile':
+   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if recordToUpdate and type(req.data['file']) != str:
+    print('--------------.>>',req.data['mode'])   
+    recordToUpdate[0].OrganigramaEstructuralFile = req.data['file'].read()
+    recordToUpdate[0].save()
+  if req.data['mode'] == 'save_organigramaFuncionalFile':
+   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if recordToUpdate and type(req.data['file']) != str:
+    print('--------------.>>',req.data['mode'])   
+    recordToUpdate[0].OrganigramaFuncionalFile = req.data['file'].read()
+    recordToUpdate[0].save()
+  if req.data['mode'] == 'save_IndicadorProcesoGestionFile':
+   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if recordToUpdate and type(req.data['file']) != str:
+    print('--------------.>>',req.data['mode'])   
+    recordToUpdate[0].IndicadorProcesoGestion = req.data['file'].read()
+    recordToUpdate[0].save()
+  if req.data['mode'] == 'save_IndicadorProcesoGestionRiesgoFile':  
+   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if recordToUpdate and type(req.data['file']) != str:
+    print('--------------.>>',req.data['mode'])
+    recordToUpdate[0].IndicadorProcesoGestionRiesgoFile = req.data['file'].read()
+    recordToUpdate[0].save()                
+    
+  if req.data['mode'] == 'request_mapaprocesoFile':
+   print('--------------.>>',req.data['mode'])   
+   manual = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if manual and manual[0].MapaProcesoFile:
+     file = bytes(manual[0].MapaProcesoFile)
+     mime = magic.Magic(mime=True)
+     tipo_mime = mime.from_buffer(file)    
+     return HttpResponse(file,content_type=tipo_mime)
+  if req.data['mode'] == 'request_estructuraprocesoFile':
+   print('--------------.>>',req.data['mode'])   
+   manual = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if manual and manual[0].EstructuraProcesoFile:
+     file = bytes(manual[0].EstructuraProcesoFile)
+     mime = magic.Magic(mime=True)
+     tipo_mime = mime.from_buffer(file)    
+     return HttpResponse(file,content_type=tipo_mime)
+  if req.data['mode'] == 'request_organigramaEstructuralFile':
+   print('--------------.>>',req.data['mode'])   
+   manual = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if manual and manual[0].OrganigramaEstructuralFile:
+     file = bytes(manual[0].OrganigramaEstructuralFile)
+     mime = magic.Magic(mime=True)
+     tipo_mime = mime.from_buffer(file)    
+     return HttpResponse(file,content_type=tipo_mime)
+  if req.data['mode'] == 'request_organigramaFuncionalFile':
+   print('--------------.>>',req.data['mode'])   
+   manual = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if manual and manual[0].OrganigramaFuncionalFile:
+     file = bytes(manual[0].OrganigramaFuncionalFile)
+     mime = magic.Magic(mime=True)
+     tipo_mime = mime.from_buffer(file)    
+     return HttpResponse(file,content_type=tipo_mime)
+  if req.data['mode'] == 'request_IndicadorProcesoGestionFile':
+   print('--------------.>>',req.data['mode'])   
+   print('----------------------------->>...>>IndicadorProcesoGestionFile')   
+   manual = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if manual and manual[0].IndicadorProcesoGestion:
+     file = bytes(manual[0].IndicadorProcesoGestion)
+     mime = magic.Magic(mime=True)
+     tipo_mime = mime.from_buffer(file)    
+     return HttpResponse(file,content_type=tipo_mime)
+  if req.data['mode'] == 'request_IndicadorProcesoGestionRiesgoFile':   
+   print('----------------------------->>...>>IndicadorProcesoGestionRiesgoFile')
+   manual = M.Manual.objects.filter(pk=req.data['manualCode'])
+   if manual and manual[0].IndicadorProcesoGestionRiesgoFile:
+     file = bytes(manual[0].IndicadorProcesoGestionRiesgoFile)
+     mime = magic.Magic(mime=True)
+     tipo_mime = mime.from_buffer(file)    
+     return HttpResponse(file,content_type=tipo_mime)             
+
+  return Response({'msg':'ok'})
+  
 router = DefaultRouter()
 
 router.register(r'procedimiento', ProcedimientoView, basename='procedimiento')
@@ -1182,5 +1385,7 @@ router.register(r'historialcambios', HistorialCambioView, basename='historialcam
 router.register(r'usuario', UsuarioView, basename='usuario')
 
 router.register(r'puestodescripcion', PuestoDescripcionView, basename='puestodescripcion')
+
+router.register(r'manual', ManualView, basename='manual')
 
 urlpatterns = router.urls + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -363,3 +363,162 @@ class Riesgos(models.Model):
     class Meta:
         managed = True
         db_table = 'Riesgos'
+
+
+#############################################MANUAL####################################         
+
+
+class Manual(models.Model):
+    ID = models.AutoField(primary_key=True)
+    CodigoManual = models.IntegerField(db_column='CodigoManual', blank=True, null=True)
+    ObjetivoGeneralManualDescri = models.CharField(db_column='ObjetivoGeneralManualDescri', max_length=500, blank=True, null=True)
+    ObjetivoEspecificoManualDescri = models.CharField(db_column='ObjetivoEspecificoManualDescri', max_length=500, blank=True, null=True)
+    AlcanceDescri = models.CharField(db_column='AlcanceDescri', max_length=300, blank=True, null=True)
+    ObjetivoGeneralUnidadNegocio = models.CharField(db_column='ObjetivoGeneralUnidadNegocio', max_length=500, blank=True, null=True)
+    MapaProcesoDescri = models.CharField(db_column='MapaProcesoDescri', max_length=500, blank=True, null=True)
+    MapaProcesoFile = models.BinaryField(db_column='MapaProcesoFile', blank=True, null=True)
+    EstructuraProcesoDescri = models.CharField(db_column='EstructuraProcesoDescri', max_length=500, blank=True, null=True)
+    EstructuraProcesoFile = models.BinaryField(db_column='EstructuraProcesoFile', blank=True, null=True)
+    OrganigramaEstructuralDescri = models.CharField(db_column='OrganigramaEstructuralDescri', max_length=500, blank=True, null=True)
+    OrganigramaEstructuralFile = models.BinaryField(db_column='OrganigramaEstructuralFile', blank=True, null=True)
+    OrganigramaFuncionalDescri = models.CharField(db_column='OrganigramaFuncionalDescri', max_length=500, blank=True, null=True)
+    OrganigramaFuncionalFile = models.BinaryField(db_column='OrganigramaFuncionalFile', blank=True, null=True)
+    PresupuestoDescri = models.CharField(db_column='PresupuestoDescri', max_length=800, blank=True, null=True)
+    PresupuestoSecondDescri = models.CharField(db_column='PresupuestoSecondDescri', max_length=800, blank=True, null=True)
+    RendicionCuentaDescri = models.CharField(db_column='RendicionCuentaDescri', max_length=800, blank=True, null=True)
+    IndicadorProcesoGestion = models.BinaryField(db_column='IndicadorProcesoGestion', blank=True, null=True)
+    IndicadorProcesoGestionRiesgoDescri = models.CharField(db_column='IndicadorProcesoGestionRiesgoDescri', max_length=800, blank=True, null=True)
+    IndicadorProcesoGestionRiesgoFile = models.BinaryField(db_column='IndicadorProcesoGestionRiesgoFile', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'Manual'    
+
+class ObjetivoEspecificoManualLista(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ObjetivoEspecificoManualLista'
+
+class MarcoLegal(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'MarcoLegal'        
+
+class ObjetivoEspecificoUnidadNegocio(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ObjetivoEspecificoUnidadNegocio'      
+
+class DescripcionPuestoManual(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Codigo = models.CharField(db_column='Codigo', max_length=200, blank=True, null=True)    
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'DescripcionPuestoManual'
+
+class ClienteInterno(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Cliente = models.CharField(db_column='Cliente', max_length=200, blank=True, null=True)    
+    Necesidad = models.CharField(db_column='Necesidad', max_length=800, blank=True, null=True)
+    Expectativa = models.CharField(db_column='Expectativa', max_length=800, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ClienteInterno'
+
+class ClienteExterno(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Cliente = models.CharField(db_column='Cliente', max_length=200, blank=True, null=True)    
+    Necesidad = models.CharField(db_column='Necesidad', max_length=800, blank=True, null=True)
+    Expectativa = models.CharField(db_column='Expectativa', max_length=800, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ClienteExterno'        
+
+class ComunicacionInterna(models.Model):
+    ID = models.AutoField(primary_key=True)
+    TipoComunicacion = models.CharField(db_column='TipoComunicacion', max_length=500, blank=True, null=True)    
+    Periodicidad = models.CharField(db_column='Periodicidad', max_length=500, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ComunicacionInterna'        
+
+class ComunicacionExterna(models.Model):
+    ID = models.AutoField(primary_key=True)
+    TipoComunicacion = models.CharField(db_column='TipoComunicacion', max_length=500, blank=True, null=True)    
+    Periodicidad = models.CharField(db_column='Periodicidad', max_length=500, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ComunicacionExterna'        
+
+class CategorizacionGasto(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)    
+    Sigla = models.CharField(db_column='Sigla', max_length=50, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'CategorizacionGasto'       
+
+class CategorizacionGastoPartida(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)    
+    Sigla = models.CharField(db_column='Sigla', max_length=50, blank=True, null=True)
+    CategorizacionGasto = models.IntegerField(db_column='CategorizacionGasto', blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'CategorizacionGastoPartida'         
+
+class BoundManual(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Codigo = models.CharField(db_column='Codigo', max_length=200, blank=True, null=True)    
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'BoundManual'        
+
+class BoundProcedimiento(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Codigo = models.CharField(db_column='Codigo', max_length=200, blank=True, null=True)    
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'BoundProcedimiento'        
+
+class RendicionCuentaLista(models.Model):
+    ID = models.AutoField(primary_key=True)    
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Manual = models.IntegerField(db_column='Manual', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'RendicionCuentaLista'        
