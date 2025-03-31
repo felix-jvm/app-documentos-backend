@@ -1164,6 +1164,7 @@ class ManualView(viewsets.ViewSet):
   return Response({'columns':[{'title':'Código manual'},{'title':'Objetivo general del manual'},{'title':'Alcance'}],'records':parsedManualRecords})
 
  def create(self,req):
+  # print('--------------------------xxx>',req.data,'---------',req.data['mode'],req.data['mode']=='saveManualFiles')
   if req.data['mode'] == 'fillForm':
    docuRecords = list(M.Documentos.objects.filter(Codigo__contains='MAN').exclude(
     Codigo__in=M.Documentos.objects.filter(pk__in=[M.Manual.objects.all().values('CodigoManual')]).values('Codigo')
@@ -1267,42 +1268,51 @@ class ManualView(viewsets.ViewSet):
       cleanedCategGastoPartRecord['Manual'] = manual[0].pk if 'CodigoManual' in req.data['payload'].keys() else manual.pk
       M.CategorizacionGastoPartida.objects.create(**cleanedCategGastoPartRecord) 
 
-  if req.data['mode'] == 'save_mapaProcesoFile':   
-   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
-   if recordToUpdate and type(req.data['file']) != str:
-    print('--------------.>>',req.data['mode'])   
-    recordToUpdate[0].MapaProcesoFile = req.data['file'].read()
-    recordToUpdate[0].save()
-  if req.data['mode'] == 'save_estructuraProcesoFile':
-   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
-   if recordToUpdate and type(req.data['file']) != str:
-    print('--------------.>>',req.data['mode'])   
-    recordToUpdate[0].EstructuraProcesoFile = req.data['file'].read()
-    recordToUpdate[0].save()
-  if req.data['mode'] == 'save_organigramaEstructuralFile':
-   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
-   if recordToUpdate and type(req.data['file']) != str:
-    print('--------------.>>',req.data['mode'])   
-    recordToUpdate[0].OrganigramaEstructuralFile = req.data['file'].read()
-    recordToUpdate[0].save()
-  if req.data['mode'] == 'save_organigramaFuncionalFile':
-   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
-   if recordToUpdate and type(req.data['file']) != str:
-    print('--------------.>>',req.data['mode'])   
-    recordToUpdate[0].OrganigramaFuncionalFile = req.data['file'].read()
-    recordToUpdate[0].save()
-  if req.data['mode'] == 'save_IndicadorProcesoGestionFile':
-   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
-   if recordToUpdate and type(req.data['file']) != str:
-    print('--------------.>>',req.data['mode'])   
-    recordToUpdate[0].IndicadorProcesoGestion = req.data['file'].read()
-    recordToUpdate[0].save()
-  if req.data['mode'] == 'save_IndicadorProcesoGestionRiesgoFile':  
-   recordToUpdate = M.Manual.objects.filter(pk=req.data['manualCode'])
-   if recordToUpdate and type(req.data['file']) != str:
-    print('--------------.>>',req.data['mode'])
-    recordToUpdate[0].IndicadorProcesoGestionRiesgoFile = req.data['file'].read()
-    recordToUpdate[0].save()                
+  if req.data['mode'] == 'saveManualFiles':
+   recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
+   if recordToUpdate:
+    recordToUpdate = recordToUpdate[0]
+    for imageFileKey in req.data.keys():
+     if imageFileKey in ['mode','manualCode']:continue
+    #  eval('recordToUpdate.%s'%(imageFileKey))=req.data[imageFileKey].read()
+     setattr(recordToUpdate,imageFileKey,req.data[imageFileKey].read())
+    recordToUpdate.save()
+  # if req.data['mode'] == 'save_mapaProcesoFile':   
+  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
+  #  if recordToUpdate and type(req.data['file']) != str:
+  #   print('--------------.>>',req.data['mode'])   
+  #   recordToUpdate[0].MapaProcesoFile = req.data['file'].read()
+  #   recordToUpdate[0].save()
+  # if req.data['mode'] == 'save_estructuraProcesoFile':
+  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
+  #  if recordToUpdate and type(req.data['file']) != str:
+  #   print('--------------.>>',req.data['mode'])   
+  #   recordToUpdate[0].EstructuraProcesoFile = req.data['file'].read()
+  #   recordToUpdate[0].save()
+  # if req.data['mode'] == 'save_organigramaEstructuralFile':
+  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
+  #  if recordToUpdate and type(req.data['file']) != str:
+  #   print('--------------.>>',req.data['mode'])   
+  #   recordToUpdate[0].OrganigramaEstructuralFile = req.data['file'].read()
+  #   recordToUpdate[0].save()
+  # if req.data['mode'] == 'save_organigramaFuncionalFile':
+  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
+  #  if recordToUpdate and type(req.data['file']) != str:
+  #   print('--------------.>>',req.data['mode'])   
+  #   recordToUpdate[0].OrganigramaFuncionalFile = req.data['file'].read()
+  #   recordToUpdate[0].save()
+  # if req.data['mode'] == 'save_indicadorProcesoGestionFile':
+  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
+  #  if recordToUpdate and type(req.data['file']) != str:
+  #   print('--------------.>>',req.data['mode'])   
+  #   recordToUpdate[0].IndicadorProcesoGestion = req.data['file'].read()
+  #   recordToUpdate[0].save()
+  # if req.data['mode'] == 'save_IndicadorProcesoGestionRiesgoFile':  
+  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
+  #  if recordToUpdate and type(req.data['file']) != str:
+  #   print('--------------.>>',req.data['mode'])
+  #   recordToUpdate[0].IndicadorProcesoGestionRiesgoFile = req.data['file'].read()
+  #   recordToUpdate[0].save()
     
   if req.data['mode'] == 'request_mapaprocesoFile':
    print('--------------.>>',req.data['mode'])   

@@ -27,6 +27,8 @@ SECRET_KEY = 'django-insecure--r8z6%8pk**sb_vv2#wt-&&w*u9859qk_#d8e^-=%%ghh43hf!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+FILE_UPLOAD_MAX_MEMORY_SIZE = 9999999999999999999999999999999999999999999999999999999999999999999
+
 ALLOWED_HOSTS = ['*']
 
 CORS_ALLOW_ALL_ORIGINS = True
