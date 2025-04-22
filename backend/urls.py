@@ -1164,7 +1164,6 @@ class ManualView(viewsets.ViewSet):
   return Response({'columns':[{'title':'Código manual'},{'title':'Objetivo general del manual'},{'title':'Alcance'}],'records':parsedManualRecords})
 
  def create(self,req):
-  # print('--------------------------xxx>',req.data,'---------',req.data['mode'],req.data['mode']=='saveManualFiles')
   if req.data['mode'] == 'fillForm':
    docuRecords = list(M.Documentos.objects.filter(Codigo__contains='MAN').exclude(
     Codigo__in=M.Documentos.objects.filter(pk__in=[M.Manual.objects.all().values('CodigoManual')]).values('Codigo')
@@ -1274,80 +1273,43 @@ class ManualView(viewsets.ViewSet):
     recordToUpdate = recordToUpdate[0]
     for imageFileKey in req.data.keys():
      if imageFileKey in ['mode','manualCode']:continue
-    #  eval('recordToUpdate.%s'%(imageFileKey))=req.data[imageFileKey].read()
      setattr(recordToUpdate,imageFileKey,req.data[imageFileKey].read())
     recordToUpdate.save()
   # if req.data['mode'] == 'save_mapaProcesoFile':   
   #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
   #  if recordToUpdate and type(req.data['file']) != str:
-  #   print('--------------.>>',req.data['mode'])   
+  #   
   #   recordToUpdate[0].MapaProcesoFile = req.data['file'].read()
   #   recordToUpdate[0].save()
-  # if req.data['mode'] == 'save_estructuraProcesoFile':
-  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
-  #  if recordToUpdate and type(req.data['file']) != str:
-  #   print('--------------.>>',req.data['mode'])   
-  #   recordToUpdate[0].EstructuraProcesoFile = req.data['file'].read()
-  #   recordToUpdate[0].save()
-  # if req.data['mode'] == 'save_organigramaEstructuralFile':
-  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
-  #  if recordToUpdate and type(req.data['file']) != str:
-  #   print('--------------.>>',req.data['mode'])   
-  #   recordToUpdate[0].OrganigramaEstructuralFile = req.data['file'].read()
-  #   recordToUpdate[0].save()
-  # if req.data['mode'] == 'save_organigramaFuncionalFile':
-  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
-  #  if recordToUpdate and type(req.data['file']) != str:
-  #   print('--------------.>>',req.data['mode'])   
-  #   recordToUpdate[0].OrganigramaFuncionalFile = req.data['file'].read()
-  #   recordToUpdate[0].save()
-  # if req.data['mode'] == 'save_indicadorProcesoGestionFile':
-  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
-  #  if recordToUpdate and type(req.data['file']) != str:
-  #   print('--------------.>>',req.data['mode'])   
-  #   recordToUpdate[0].IndicadorProcesoGestion = req.data['file'].read()
-  #   recordToUpdate[0].save()
-  # if req.data['mode'] == 'save_IndicadorProcesoGestionRiesgoFile':  
-  #  recordToUpdate = M.Manual.objects.filter(CodigoManual=req.data['manualCode'])
-  #  if recordToUpdate and type(req.data['file']) != str:
-  #   print('--------------.>>',req.data['mode'])
-  #   recordToUpdate[0].IndicadorProcesoGestionRiesgoFile = req.data['file'].read()
-  #   recordToUpdate[0].save()
-    
-  if req.data['mode'] == 'request_mapaprocesoFile':
-   print('--------------.>>',req.data['mode'])   
+  if req.data['mode'] == 'request_mapaprocesoFile':   
    manual = M.Manual.objects.filter(pk=req.data['manualCode'])
    if manual and manual[0].MapaProcesoFile:
      file = bytes(manual[0].MapaProcesoFile)
      mime = magic.Magic(mime=True)
      tipo_mime = mime.from_buffer(file)    
      return HttpResponse(file,content_type=tipo_mime)
-  if req.data['mode'] == 'request_estructuraprocesoFile':
-   print('--------------.>>',req.data['mode'])   
+  if req.data['mode'] == 'request_estructuraprocesoFile':   
    manual = M.Manual.objects.filter(pk=req.data['manualCode'])
    if manual and manual[0].EstructuraProcesoFile:
      file = bytes(manual[0].EstructuraProcesoFile)
      mime = magic.Magic(mime=True)
      tipo_mime = mime.from_buffer(file)    
      return HttpResponse(file,content_type=tipo_mime)
-  if req.data['mode'] == 'request_organigramaEstructuralFile':
-   print('--------------.>>',req.data['mode'])   
+  if req.data['mode'] == 'request_organigramaEstructuralFile':   
    manual = M.Manual.objects.filter(pk=req.data['manualCode'])
    if manual and manual[0].OrganigramaEstructuralFile:
      file = bytes(manual[0].OrganigramaEstructuralFile)
      mime = magic.Magic(mime=True)
      tipo_mime = mime.from_buffer(file)    
      return HttpResponse(file,content_type=tipo_mime)
-  if req.data['mode'] == 'request_organigramaFuncionalFile':
-   print('--------------.>>',req.data['mode'])   
+  if req.data['mode'] == 'request_organigramaFuncionalFile':   
    manual = M.Manual.objects.filter(pk=req.data['manualCode'])
    if manual and manual[0].OrganigramaFuncionalFile:
      file = bytes(manual[0].OrganigramaFuncionalFile)
      mime = magic.Magic(mime=True)
      tipo_mime = mime.from_buffer(file)    
      return HttpResponse(file,content_type=tipo_mime)
-  if req.data['mode'] == 'request_IndicadorProcesoGestionFile':
-   print('--------------.>>',req.data['mode'])   
+  if req.data['mode'] == 'request_IndicadorProcesoGestionFile':   
    print('----------------------------->>...>>IndicadorProcesoGestionFile')   
    manual = M.Manual.objects.filter(pk=req.data['manualCode'])
    if manual and manual[0].IndicadorProcesoGestion:
@@ -1366,6 +1328,85 @@ class ManualView(viewsets.ViewSet):
 
   return Response({'msg':'ok'})
   
+class PoliticaView(viewsets.ViewSet):
+ 
+ def list(self,req):
+  PoliticaRecords = M.Politica.objects.all().values('CodigoPolitica','ObjetivoDescri','AlcanceDescri')
+  parsedPoliticaRecords = []
+  for record in PoliticaRecords:
+   codigoPolitica = M.Documentos.objects.filter(pk=record['CodigoPolitica']).values('Codigo')
+   codigoPolitica = codigoPolitica[0]['Codigo'] if codigoPolitica else ''
+   parsedPoliticaRecords.append([codigoPolitica,record['ObjetivoDescri'],record['AlcanceDescri']])
+  return Response({'columns':[{'title':'Código politica'},{'title':'Objetivo general de la politica'},{'title':'Alcance de la politica'}],'records':parsedPoliticaRecords}) 
+ 
+ def create(self,req): 
+  if req.data['mode'] == 'fillForm':
+   docuRecords = list(M.Documentos.objects.filter(Codigo__contains='POL').exclude(
+    Codigo__in=M.Documentos.objects.filter(pk__in=[M.Politica.objects.all().values('CodigoPolitica')]).values('Codigo')
+    ).values('ID','Codigo','Descripcion'))
+   pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None: [
+    {**record, newColumnName: fkRecord[fkColumn]}
+    for record in targetTable
+    for fkRecord in eval('M.%s' % fkTable).objects.filter(pk=record[targetColumn]).values(fkColumn)] 
+   payload = {}
+  #  parsedPuestoRecords = []
+   payload['ObjetivoPolitica_CodigoPolitica'] = docuRecords
+   payload['ObjetivoPolitica_DocumentosReferenciasPolitica'] = M.Documentos.objects.all().values('ID','Codigo','Descripcion')
+   payload['ResponsabilidadesPolitica_Puesto'] = M.Puestos.objects.all().values('ID','Descripcion')      
+   payload['TerminologiaDefinicionesPolitica_Termino'] = M.Termino.objects.all().values('ID','Descripcion')
+   payload['Proveedores_Procedimientos'] = M.Procedimiento.objects.all().values('ID','Codigo','Objetivo')   
+
+   if 'CodigoPolitica' in req.data.keys():   
+    selfDocumentCode = list(M.Documentos.objects.filter(Codigo=req.data['CodigoPolitica']).values('ID','Codigo','Descripcion'))
+    documentoPk = selfDocumentCode[0]['ID'] if selfDocumentCode else ''
+    payload['ObjetivoPolitica_CodigoPolitica'].extend(selfDocumentCode)
+    if documentoPk:
+     tempObj = {}
+     politicaPk = ''
+     pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None: [
+     {**record, newColumnName: fkRecord[fkColumn]}
+     for record in targetTable
+     for fkRecord in eval('M.%s' % fkTable).objects.filter(pk=record[targetColumn]).values(fkColumn)
+     ]
+     recordsRenombrator = lambda newColumnNames=None, targetTable=None:[dict(zip(newColumnNames, record.values())) for record in targetTable]
+     tempObj['Politica'] = M.Politica.objects.filter(CodigoPolitica=documentoPk).values('ID','CodigoPolitica','ObjetivoDescri','AlcanceDescri','ClasificacionPoliticaDescri','PrecioCompra','HorarioRecibo','ProveedoresDescri','PagoDescri')    
+     tempObj['Politica'] = tempObj['Politica'][0] if tempObj['Politica'] else ''
+     politicaPk = tempObj['Politica']['ID']
+     tempObj['DocumentosReferenciasPolitica'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.DocumentosReferenciasPolitica.objects.filter(Politica=politicaPk).values('ID','IDDocumento'), fkTable='Documentos', targetColumn='IDDocumento', fkColumn='Descripcion', newColumnName='Documentos'), newColumnNames=['ID','na','Documentos'])     
+     tempObj['ResponsabilidadesPolitica'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.ResponsabilidadesPolitica.objects.filter(Politica=politicaPk).values('ID','Indice','Puesto','Descri'), fkTable='Puestos', targetColumn='Puesto', fkColumn='Descripcion', newColumnName='Puesto'),newColumnNames=['ID','Indice','Puesto','Descripción'])
+     tempObj['TerminologiasPolitica'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.TerminologiasPolitica.objects.filter(Politica=politicaPk).values('ID','Termino','Descri'), fkTable='Termino', targetColumn='Termino', fkColumn='Descripcion', newColumnName='Termino'),newColumnNames=['ID','Termino','Descripción'])
+    #  tempObj['TerminologiasPolitica'] = M.TerminologiasPolitica.objects.filter(Politica=politicaPk).values('ID','Termino','Descri')
+     tempObj['ClasificacionTipoMaterialPolitica'] = recordsRenombrator(targetTable=M.ClasificacionTipoMaterialPolitica.objects.filter(Politica=politicaPk).values('ID','Categoria','TipoMaterial','Descri'),newColumnNames=['ID','Categoria','TipoMaterial','Descripción'])
+     tempObj['BoundProcedimientosPolitica'] = recordsRenombrator(targetTable=M.BoundProcedimientosPolitica.objects.filter(Politica=politicaPk).values('ID','Codigo','Descri'),newColumnNames=['ID','Código','Descripción'])
+     tempObj['AnexoPolitica'] = recordsRenombrator(targetTable=M.AnexoPolitica.objects.filter(Politica=politicaPk).values('ID','Numero','Descri','Codigo'),newColumnNames=['ID','No.','Nombre','Código'])     
+     payload['specificData'] = {**tempObj}
+   return Response({'msg':'ok','payload':payload})
+  if req.data['mode'] == 'savePoliticaRecord':
+   politica = ''
+   if 'CodigoPolitica' in req.data['payload'].keys():
+    documentoPk = M.Documentos.objects.filter(Codigo=req.data['payload']['CodigoPolitica']).values('ID')
+    politica = M.Politica.objects.filter(CodigoPolitica=documentoPk[0]['ID']) if documentoPk else ''
+    politica.update(**req.data['payload']['Politica'])
+   else:
+    politica = M.Politica.objects.create(**req.data['payload']['Politica'])
+   for dataTable in req.data['payload'].keys():    
+    if dataTable in ['CodigoPolitica','Politica','RevAprobacion','historialCambios','recordsToDelete']:continue
+    for dataTableRecord in req.data['payload'][dataTable]:
+     cleanedRecord = dataTableRecord
+     print('----------------------------------x>',dataTableRecord)     
+     if 'elementHtml' in cleanedRecord.keys():cleanedRecord.pop('elementHtml')
+     cleanedRecord['Politica'] = politica[0].pk if 'CodigoPolitica' in req.data['payload'].keys() else politica.pk
+     eval('M.%s'%(dataTable)).objects.create(**cleanedRecord)
+    for record in req.data['payload']['recordsToDelete']:
+     if record.keys():
+      tableName = list(record.keys())[0]
+      recordToDelete = eval('M.%s'%(tableName)).objects.filter(pk=record[tableName])
+      print('----------------------------------xxxxx>',recordToDelete)           
+      if recordToDelete:
+       recordToDelete[0].delete()  
+
+  return Response({'msg':'ok'})
+
 router = DefaultRouter()
 
 router.register(r'procedimiento', ProcedimientoView, basename='procedimiento')
@@ -1397,5 +1438,7 @@ router.register(r'usuario', UsuarioView, basename='usuario')
 router.register(r'puestodescripcion', PuestoDescripcionView, basename='puestodescripcion')
 
 router.register(r'manual', ManualView, basename='manual')
+
+router.register(r'politica', PoliticaView, basename='politica')
 
 urlpatterns = router.urls + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

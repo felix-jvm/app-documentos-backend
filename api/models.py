@@ -522,3 +522,95 @@ class RendicionCuentaLista(models.Model):
     class Meta:
         managed = True
         db_table = 'RendicionCuentaLista'        
+
+
+
+#############################################POLITICA####################################
+
+
+class Politica(models.Model):
+    ID = models.AutoField(primary_key=True)
+    CodigoPolitica = models.IntegerField(db_column='CodigoPolitica', blank=True, null=True)
+    ObjetivoDescri = models.CharField(db_column='ObjetivoDescri', max_length=500, blank=True, null=True)
+    AlcanceDescri = models.CharField(db_column='AlcanceDescri', max_length=500, blank=True, null=True)
+    ClasificacionPoliticaDescri = models.CharField(db_column='ClasificacionPoliticaDescri', max_length=500, blank=True, null=True)    
+    PrecioCompra = models.CharField(db_column='PrecioCompra', max_length=500, blank=True, null=True)
+    HorarioRecibo = models.CharField(db_column='HorarioRecibo', max_length=500, blank=True, null=True)
+    ProveedoresDescri = models.CharField(db_column='ProveedoresDescri', max_length=500, blank=True, null=True)
+    PagoDescri = models.CharField(db_column='PagoDescri', max_length=500, blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'Politica'
+
+class DocumentosReferenciasPolitica(models.Model):        
+   ID = models.AutoField(primary_key=True) 
+   IDDocumento = models.IntegerField(db_column='IDDocumento', blank=True, null=True)
+   Politica = models.IntegerField(db_column='IDProcedimiento', blank=True, null=True)
+
+   class Meta:
+        managed = True
+        db_table = 'DocumentosReferenciasPolitica'
+
+class ResponsabilidadesPolitica(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Indice = models.CharField(db_column='Indice', max_length=10, blank=True, null=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Puesto = models.IntegerField(db_column='Puesto', blank=True, null=True)    
+    Politica = models.IntegerField(db_column='Politica', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ResponsabilidadesPolitica'
+
+class TerminologiasPolitica(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Termino = models.IntegerField(db_column='Termino', blank=True, null=True)    
+    Politica = models.IntegerField(db_column='Politica', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'TerminologiasPolitica'
+
+class ClasificacionTipoMaterialPolitica(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Categoria = models.CharField(db_column='Categoria', max_length=50, blank=True, null=True)   
+    TipoMaterial = models.CharField(db_column='TipoMaterial', blank=True, null=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)    
+    Politica = models.IntegerField(db_column='Politica', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'ClasificacionTipoMaterialPolitica'
+
+class BoundProcedimientosPolitica(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Codigo = models.CharField(db_column='Codigo', max_length=50, blank=True, null=True)    
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)       
+    Politica = models.IntegerField(db_column='Politica', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'BoundProcedimientosPolitica'
+
+class AnexoPolitica(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Numero = models.CharField(db_column='Numero', max_length=50, blank=True, null=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)       
+    Codigo = models.CharField(db_column='Codigo', max_length=50, blank=True, null=True)    
+    Politica = models.IntegerField(db_column='Politica', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'AnexoPolitica'
+
+class TerminologiasDefPolitica(models.Model):        
+   ID = models.AutoField(primary_key=True) 
+   IDTermino = models.IntegerField(db_column='IDTermino', blank=False, null=False)
+   Descripcion = models.CharField(db_column='Descripcion', max_length=500, blank=False, null=False)
+   Politica = models.IntegerField(db_column='Politica', blank=False, null=False)
+
+   class Meta:
+        managed = True
+        db_table = 'TerminologiasDefPolitica'        
