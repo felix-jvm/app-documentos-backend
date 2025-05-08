@@ -106,17 +106,18 @@ class Anexos(models.Model):
         managed = True
         db_table = 'Anexos'
 
-class RevAprobacion(models.Model):        
+class RevAprobacion(models.Model):
    ID = models.AutoField(primary_key=True)
-   IDProcedimiento = models.IntegerField(blank=False, null=False)    
+   DocumentKey = models.CharField(db_column='DocumentKey', max_length=50, blank=True, null=True)
+   FormName = models.CharField(db_column='FormName', max_length=50, blank=True, null=True)
    ElaboradoPor = models.CharField(db_column='ElaboradoPor', max_length=50, blank=True, null=True)
-   FirmaElaborado = models.CharField(db_column='FirmaElaborado', max_length=50, blank=True, null=True)
+   FirmaElaborado = models.BinaryField(db_column='FirmaElaborado', blank=True, null=True)
    PuestoElaborado = models.CharField(db_column='PuestoElaborado', max_length=50, blank=True, null=True)   
    RevisadoPor = models.CharField(db_column='RevisadoPor', max_length=50, blank=True, null=True)
-   FirmaRevisado = models.CharField(db_column='FirmaRevisado', max_length=50, blank=True, null=True)
+   FirmaRevisado = models.BinaryField(db_column='FirmaRevisado', blank=True, null=True)
    PuestoRevisado = models.CharField(db_column='PuestoRevisado', max_length=50, blank=True, null=True)
    AprobadoPor = models.CharField(db_column='AprobadoPor', max_length=50, blank=True, null=True)
-   FirmaAprobado = models.CharField(db_column='FirmaAprobado', max_length=50, blank=True, null=True)
+   FirmaAprobado = models.BinaryField(db_column='FirmaAprobado', blank=True, null=True)
    PuestoAprobado = models.CharField(db_column='PuestoAprobado', max_length=50, blank=True, null=True)
 
    class Meta:
@@ -127,8 +128,9 @@ class HistorialCambios(models.Model):
    ID = models.AutoField(primary_key=True) 
    Fecha = models.DateField(auto_now_add=True)
    Version = models.CharField(db_column='Version', max_length=500, blank=True, null=True)   
-   Descripcion = models.CharField(db_column='Descripcion', max_length=500, blank=True, null=True)
-   IDProcedimiento = models.IntegerField(db_column='IDProcedimiento', blank=True, null=True)
+   Descripcion = models.CharField(db_column='Descripcion', max_length=9999, blank=True, null=True)
+   FormName = models.CharField(db_column='FormName', max_length=50, blank=True, null=True)
+   DocumentKey = models.CharField(db_column='DocumentKey', max_length=50, blank=True, null=True)
 
    class Meta:
         managed = True
@@ -538,6 +540,7 @@ class Politica(models.Model):
     HorarioRecibo = models.CharField(db_column='HorarioRecibo', max_length=500, blank=True, null=True)
     ProveedoresDescri = models.CharField(db_column='ProveedoresDescri', max_length=500, blank=True, null=True)
     PagoDescri = models.CharField(db_column='PagoDescri', max_length=500, blank=True, null=True)
+    TipoPoliticaFile = models.BinaryField(db_column='TipoPoliticaFile', blank=True, null=True)
 
     class Meta:
         managed = True
@@ -613,4 +616,35 @@ class TerminologiasDefPolitica(models.Model):
 
    class Meta:
         managed = True
-        db_table = 'TerminologiasDefPolitica'        
+        db_table = 'TerminologiasDefPolitica'
+
+class Instructivo(models.Model):
+    ID = models.AutoField(primary_key=True)
+    CodigoInstructivo = models.IntegerField(db_column='CodigoInstructivo', blank=True, null=True)
+    ObjetivoDescri = models.CharField(db_column='ObjetivoDescri', max_length=500, blank=True, null=True)
+    AlcanceDescri = models.CharField(db_column='AlcanceDescri', max_length=500, blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'Instructivo'
+
+class InstructivoInstrucciones(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Indice = models.CharField(db_column='Indice', max_length=10, blank=True, null=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)
+    Instructivo = models.IntegerField(db_column='Instructivo', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'InstructivoInstrucciones'
+
+class InstructivoAnexo(models.Model):
+    ID = models.AutoField(primary_key=True)
+    Numero = models.CharField(db_column='Numero', max_length=50, blank=True, null=True)
+    Descri = models.CharField(db_column='Descri', max_length=500, blank=True, null=True)       
+    Codigo = models.CharField(db_column='Codigo', max_length=50, blank=True, null=True)    
+    Instructivo = models.IntegerField(db_column='Instructivo', blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'InstructivoAnexo'

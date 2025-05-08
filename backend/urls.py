@@ -57,7 +57,7 @@ class ProcedimientoView(viewsets.ViewSet):
    data['Puestos'] = list(M.Puestos.objects.all().values('ID','Descripcion'))   
    data['SubDescripciones-IDDescripcion'] = list(M.SubDescripciones.objects.all().values('ID','SubDescripcion'))
    data['Anexos-Nombre'] = list(M.Anexos.objects.all().values('ID','Nombre'))
-   data['RevAprobacion-RevisadoPor'] = list(M.RevAprobacion.objects.all().values('ID','RevisadoPor'))
+  #  data['RevAprobacion-RevisadoPor'] = list(M.RevAprobacion.objects.all().values('ID','RevisadoPor'))
    if 'procedCodigo' in req.data.keys():
     specificData = {}
     relationsObj = list(M.Procedimiento.objects.filter(Codigo=req.data['procedCodigo']))
@@ -71,15 +71,14 @@ class ProcedimientoView(viewsets.ViewSet):
      specificData['Procedimiento_Codigo'] = relationsObj[0].Codigo
      specificData['Procedimiento_Objetivo'] = relationsObj[0].Objetivo
      specificData['Procedimiento_Alcance'] = relationsObj[0].Alcance
-    #  specificData['Diagrama_Flujo'] = ImageSerializer(relationsObj[0],many=False).data
      procId = relationsObj[0].ID
     else:
      return Response([])
     recordsIterator = lambda columns,toIterate,refTable=None,*userFriendlyColumn:[{prop:(list(eval('M.%s'%(refTable)).objects.filter(pk=record[prop]).values(*userFriendlyColumn))[:1] if 'ID' in prop and len(prop) > 2 else record[prop]) for prop in columns if type(record)==dict and prop in record.keys()} for record in toIterate]
 
-    relationsObj = list(M.RevAprobacion.objects.filter(IDProcedimiento=procId).values('ID','ElaboradoPor','FirmaElaborado','PuestoElaborado','RevisadoPor','FirmaRevisado','PuestoRevisado','AprobadoPor','FirmaAprobado','PuestoAprobado'))
-    if relationsObj:
-     specificData['RevAprobacion'] = [[relationsObj[0]['ElaboradoPor'],relationsObj[0]['FirmaElaborado'],relationsObj[0]['PuestoElaborado']], [relationsObj[0]['RevisadoPor'],relationsObj[0]['FirmaRevisado'],relationsObj[0]['PuestoRevisado']], [relationsObj[0]['AprobadoPor'],relationsObj[0]['FirmaAprobado'],relationsObj[0]['PuestoAprobado']],relationsObj[0]['ID']]
+    # relationsObj = list(M.RevAprobacion.objects.filter(IDProcedimiento=procId).values('ID','ElaboradoPor','FirmaElaborado','PuestoElaborado','RevisadoPor','FirmaRevisado','PuestoRevisado','AprobadoPor','FirmaAprobado','PuestoAprobado'))
+    # if relationsObj:
+    #  specificData['RevAprobacion'] = [[relationsObj[0]['ElaboradoPor'],relationsObj[0]['FirmaElaborado'],relationsObj[0]['PuestoElaborado']], [relationsObj[0]['RevisadoPor'],relationsObj[0]['FirmaRevisado'],relationsObj[0]['PuestoRevisado']], [relationsObj[0]['AprobadoPor'],relationsObj[0]['FirmaAprobado'],relationsObj[0]['PuestoAprobado']],relationsObj[0]['ID']]
     specificData['Anexos'] = list(M.Anexos.objects.filter(IDProcedimiento=procId).values('ID','Num','Nombre','Codigo'))
 
     relationsObj = list(M.DescripcionesProcedimiento.objects.filter(IDProcedimiento=procId).values('ID','Descripcion'))
@@ -97,9 +96,7 @@ class ProcedimientoView(viewsets.ViewSet):
     if relationsObj:specificData['Responsabilidades'] = recordsIterator(['ID','IDPuesto','Descripcion'],relationsObj,'Puestos','Descripcion')
 
     relationsObj = list(M.DocumentosReferencias.objects.filter(IDProcedimiento=procId).values('ID','IDDocumento')) 
-    if relationsObj:specificData['DocumentosReferencias'] = recordsIterator(['ID','IDDocumento'],relationsObj,'Documentos','Codigo','Descripcion')
-
-    specificData['HistorialCambios'] = list(M.HistorialCambios.objects.filter(IDProcedimiento=procId).values('ID','Fecha','Version','Descripcion'))    
+    if relationsObj:specificData['DocumentosReferencias'] = recordsIterator(['ID','IDDocumento'],relationsObj,'Documentos','Codigo','Descripcion')  
 
     relationsObj = M.Documentos.objects.filter(Codigo=req.data['procedCodigo'].strip().replace(' ','')).values('Descripcion','Fecha','Version')
     if relationsObj:specificData['Documentos'] = relationsObj[0]
@@ -107,17 +104,7 @@ class ProcedimientoView(viewsets.ViewSet):
     data['specificData'] = specificData
 
   if req.data['mode'] == 'CREATE':
-   columnsSchema = {'DocumentosReferencias':['IDDocumento'],'Responsabilidades':['Descripcion','IDPuesto'],'TerminologiasDef':['IDTermino','Descripcion'],'DescripcionesProcedimiento':['Descripcion'],'SubDescripciones':['SubDescripcion','IDDescripcion'],'Anexos':['Codigo','Nombre','Num'],'RevAprobacion':[
-    'ElaboradoPor',
-    'FirmaElaborado',
-    'PuestoElaborado',
-    'RevisadoPor',
-    'FirmaRevisado',
-    'PuestoRevisado',
-    'AprobadoPor',
-    'FirmaAprobado',
-    'PuestoAprobado',
-    ],'HistorialCambios':['Descripcion','Version','Fecha']}
+   columnsSchema = {'DocumentosReferencias':['IDDocumento'],'Responsabilidades':['Descripcion','IDPuesto'],'TerminologiasDef':['IDTermino','Descripcion'],'DescripcionesProcedimiento':['Descripcion'],'SubDescripciones':['SubDescripcion','IDDescripcion'],'Anexos':['Codigo','Nombre','Num']}
    dataToProcess = req.data['backenData']
    procId = ''
    if 'specificProced' in req.data['backenData'].keys():
@@ -837,170 +824,119 @@ class AnexoView(viewsets.ViewSet):
  
 
 class RevAprobacionView(viewsets.ViewSet):
- 
- fieldsSchema = {
-  'fields':[{'name':'IDProcedimiento', 'null':False, 'maxLength':False, 'needsToBeUnique':False, 'type':'select'},
-            {'name':'ElaboradoPor', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
-            {'name':'FirmaElaborado', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
-            {'name':'PuestoElaborado', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
-            {'name':'RevisadoPor', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
-            {'name':'FirmaRevisado', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
-            {'name':'PuestoRevisado', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
-            {'name':'AprobadoPor', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
-            {'name':'FirmaAprobado', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'},
-            {'name':'PuestoAprobado', 'null':True, 'maxLength':50, 'needsToBeUnique':False, 'type':'str'}]
- }
-
- relations ={
-   'any':True,
-   'to':[{'name':'Procedimiento', 'column':'Objetivo', 'from':'IDProcedimiento'}]
-  } 
-
- def create(self,req):
-  data = ''
-  relationsData = []
-  
-  if req.data['mode'] == 'relations':
-   if self.relations['any']:
-    for relationDetails in self.relations['to']:
-      relationRecords = list(eval('M.%s'%relationDetails['name']).objects.all().values(relationDetails['column']))
-      if relationRecords:
-       relationsData.append(relationRecords)
-       relationsData[-1][0]['table'] = relationDetails['name']
-   data = {'schema':self.fieldsSchema, 'relations':relationsData if relationsData else []}
-  elif req.data['mode'] == 'create':
-   fields = {}
-   fields['ElaboradoPor'] = req.data['data']['ElaboradoPor']
-   fields['FirmaElaborado'] = req.data['data']['FirmaElaborado']
-   fields['PuestoElaborado'] = req.data['data']['PuestoElaborado']
-   fields['RevisadoPor'] = req.data['data']['RevisadoPor']
-   fields['FirmaRevisado'] = req.data['data']['FirmaRevisado']
-   fields['PuestoRevisado'] = req.data['data']['PuestoRevisado']
-   fields['AprobadoPor'] = req.data['data']['AprobadoPor']
-   fields['FirmaAprobado'] = req.data['data']['FirmaAprobado']
-   fields['PuestoAprobado'] = req.data['data']['PuestoAprobado']
-   fields['IDProcedimiento'] = M.Procedimiento.objects.filter(Objetivo=req.data['data']['IDProcedimiento']).values('ID')[0]['ID'] if req.data['data']['IDProcedimiento'] else None
-   M.RevAprobacion.objects.create(**fields)
-  elif req.data['mode'] == 'requestUpdateData':
-   obj = M.RevAprobacion.objects.get(pk=req.data['ID']['current'])
-   data = {}
-   data['ElaboradoPor'] = obj.ElaboradoPor
-   data['FirmaElaborado'] = obj.FirmaElaborado
-   data['PuestoElaborado'] = obj.PuestoElaborado   
-   data['RevisadoPor'] = obj.RevisadoPor
-   data['FirmaRevisado'] = obj.FirmaRevisado
-   data['PuestoRevisado'] = obj.PuestoRevisado
-   data['AprobadoPor'] = obj.AprobadoPor
-   data['FirmaAprobado'] = obj.FirmaAprobado
-   data['PuestoAprobado'] = obj.PuestoAprobado
-   data['IDProcedimiento'] = obj.IDProcedimiento    
-  elif req.data['mode'] == 'update':
-   fields = {}
-   fields['ElaboradoPor'] = req.data['data']['ElaboradoPor']
-   fields['FirmaElaborado'] = req.data['data']['FirmaElaborado']
-   fields['PuestoElaborado'] = req.data['data']['PuestoElaborado']
-   fields['RevisadoPor'] = req.data['data']['RevisadoPor']
-   fields['FirmaRevisado'] = req.data['data']['FirmaRevisado']
-   fields['PuestoRevisado'] = req.data['data']['PuestoRevisado']
-   fields['AprobadoPor'] = req.data['data']['AprobadoPor']
-   fields['FirmaAprobado'] = req.data['data']['FirmaAprobado']
-   fields['PuestoAprobado'] = req.data['data']['PuestoAprobado']  
-   fields['IDProcedimiento'] = M.Procedimiento.objects.filter(Objetivo=req.data['data']['IDProcedimiento']).values('ID')[0]['ID'] if req.data['data']['IDProcedimiento'] else None   
-   updatedObj = M.RevAprobacion(pk=req.data['data']['ID'],**fields)
-   updatedObj.save()                    
-  return Response(json.dumps({'data':data}))
- 
- def delete(self,req):
-  print('---->',req.data['ID'])
-  objToDelete = M.RevAprobacion.objects.get(pk=req.data['ID'])
-  objToDelete.delete()
-  return Response({'response':'ok'}) 
 
  def list(self, req):
-  data = serializers.serialize('json',M.RevAprobacion.objects.all())
-  if data == '[]':
-   data = M.RevAprobacion.__doc__
-   data = data.replace(' ','')
-   data = data.replace('(','')
-   data = data.replace(')','')
-   data = data.replace('Rev_Aprobacion','')
-   data = data.split(',')  
-   data.append('statusEmpty')
-   data.append({'route':'revaprobacion'})  
-  return Response(data)
+  pass
+
+ def create(self,req):
+  if req.data['mode'] == 'requestFirmaElaboradoFile':
+   recToReqImage = M.RevAprobacion.objects.filter(DocumentKey=req.data['documentKey']).filter(FormName=req.data['formName'])
+   files = []
+   if recToReqImage:
+    recToReqImage = recToReqImage[0]
+    if recToReqImage.FirmaElaborado:
+     return HttpResponse(recToReqImage.FirmaElaborado,content_type='image/png')
+  if req.data['mode'] == 'requestFirmaRevisadoFile':
+   recToReqImage = M.RevAprobacion.objects.filter(DocumentKey=req.data['documentKey']).filter(FormName=req.data['formName'])
+   files = []
+   if recToReqImage:
+    recToReqImage = recToReqImage[0]
+    if recToReqImage.FirmaRevisado:
+     return HttpResponse(recToReqImage.FirmaRevisado,content_type='image/png')
+  if req.data['mode'] == 'requestFirmaAprobadoFile':
+   recToReqImage = M.RevAprobacion.objects.filter(DocumentKey=req.data['documentKey']).filter(FormName=req.data['formName'])
+   files = []
+   if recToReqImage:
+    recToReqImage = recToReqImage[0]
+    if recToReqImage.FirmaAprobado:
+     return HttpResponse(recToReqImage.FirmaAprobado,content_type='image/png')       
+  if req.data['mode'] == 'requestRecord':
+   recToReq = {}
+   recToReq['Puestos'] = list(M.Puestos.objects.all().values('ID','Descripcion'))
+   recordsRenombrator = lambda newColumnNames=None, targetTable=None:[dict(zip(newColumnNames, record.values())) for record in targetTable]
+   if 'documentKey' and 'formName' in req.data.keys():
+    revAprobacionSpecRec = recordsRenombrator(
+     targetTable=M.RevAprobacion.objects.filter(DocumentKey=req.data['documentKey']).filter(FormName=req.data['formName']).values(
+    'ElaboradoPor',
+    'PuestoElaborado',
+    'RevisadoPor',
+    'PuestoRevisado',
+    'AprobadoPor',
+    'PuestoAprobado'),newColumnNames=['Elaborado por','Elaborado Puesto','Revisado por','Revisado Puesto','Aprobado por','Aprobado Puesto'])
+     
+    if revAprobacionSpecRec:recToReq['revAprobacion'] = revAprobacionSpecRec[0]
+   return Response({'msg':'ok','payload':recToReq})
+
+  if req.data['mode'] == 'saveRecord':
+   recToUpdt = M.RevAprobacion.objects.filter(DocumentKey=req.data['documentKey']).filter(FormName=req.data['formName'])
+   if not recToUpdt:M.RevAprobacion.objects.create(**req.data['payload'])
+   else:recToUpdt.update(**req.data['payload'])
+  if req.data['mode'] == 'saveImageFile':  
+   recordToUpdate = M.RevAprobacion.objects.filter(DocumentKey=req.data['documentKey']).filter(FormName=req.data['formName'])
+   if recordToUpdate:
+    recordToUpdate = recordToUpdate[0]
+   for imageFileKey in req.data.keys():
+    if imageFileKey in ['mode','documentKey','formName']:continue
+    setattr(recordToUpdate,imageFileKey,req.data[imageFileKey].read())
+    recordToUpdate.save()   
+  return Response({'msg':'ok'})
 
 
 class HistorialCambioView(viewsets.ViewSet):
  
- fieldsSchema = {
-  'fields':[{'name':'Version', 'null':True, 'maxLength':4, 'needsToBeUnique':False, 'type':'decimal'},
-            {'name':'Descripcion', 'null':True, 'maxLength':500, 'needsToBeUnique':False, 'type':'str'},
-            {'name':'IDProcedimiento', 'null':True, 'maxLength':False, 'needsToBeUnique':False, 'type':'select'}]
- }
-
- relations = {
-   'any':True,
-   'to':[{'name':'Procedimiento', 'column':'Objetivo', 'from':'IDProcedimiento'}]
-  } 
- 
  def create(self,req):
-  data = ''
-  relationsData = []
+  if req.data['mode'] == 'saveRecord':
+   formatedDescription = 'Registro/s añadido/s'
+   for section in req.data['payload']:
+    if type(req.data['payload'][section]) != dict:
+     formatedDescription += '\n'
+     formatedDescription += '* %s'%req.data['payload'][section]
+     formatedDescription += '\n' 
+     continue
+    else:
+     formatedDescription += '\n'
+    if section == 'recordsToDelete' or req.data['payload'][section]=={}:continue
+    formatedDescription += '%s'%section
+    for recordTitle in req.data['payload'][section]:
+     formatedRecordString = '* '  
+     for recordProp in req.data['payload'][section][recordTitle]:
+      propValue = req.data['payload'][section][recordTitle][recordProp]
+      formatedRecordString = formatedRecordString + ' ' + propValue
+     formatedDescription = formatedDescription + '\n' + formatedRecordString
+   formatedDescription += '\n'
+   formatedDescription += 'Registro/s eliminados/s'
+   formatedDescription += '\n'
+   for section in req.data['payload']['recordsToDelete']:
+    for recordDescription in req.data['payload']['recordsToDelete'][section]:
+     formatedDescription += '\n'
+     formatedDescription += '* %s'%recordDescription
+     formatedDescription += '\n'
+
+   newRecordToInsert = {'Version':'','Descripcion':'','FormName':'','DocumentKey':''}
+   highestVersion = M.HistorialCambios.objects.filter(FormName=req.data['formName']).order_by('-Version').values('Version')
+   if not highestVersion:
+    newRecordToInsert['Version'] = '001'
+    newRecordToInsert['Descripcion'] = 'Elaboración del documento.'
+    newRecordToInsert['DocumentKey'] = req.data['documentKey']   
+    newRecordToInsert['FormName'] = req.data['formName']
+   else:
+    highestVersion = highestVersion[0]['Version']
+    highestVersion = int(highestVersion) + 1
+    highestVersion = str(highestVersion).zfill(3)
+    newRecordToInsert['Version'] = highestVersion
+    newRecordToInsert['Descripcion'] = formatedDescription
+    newRecordToInsert['DocumentKey'] = req.data['documentKey']
+    newRecordToInsert['FormName'] = req.data['formName']
+   M.HistorialCambios.objects.create(**newRecordToInsert) 
+   return Response({'msg':'ok'})
   
-  if req.data['mode'] == 'relations':
-   if self.relations['any']:
-    for relationDetails in self.relations['to']:
-      relationRecords = list(eval('M.%s'%relationDetails['name']).objects.all().values(relationDetails['column']))
-      if relationRecords:
-       relationsData.append(relationRecords)
-       relationsData[-1][0]['table'] = relationDetails['name']
-   data = {'schema':self.fieldsSchema, 'relations':relationsData if relationsData else []}
-  elif req.data['mode'] == 'create':
-   fields = {}
-   fields['Version'] = req.data['data']['Version']
-   fields['Descripcion'] = req.data['data']['Descripcion']
-   fields['IDProcedimiento'] = M.Procedimiento.objects.filter(Objetivo=req.data['data']['IDProcedimiento']).values('ID')[0]['ID'] if req.data['data']['IDProcedimiento'] else None
-   M.HistorialCambios.objects.create(**fields)
-  elif req.data['mode'] == 'requestUpdateData':
-   obj = M.HistorialCambios.objects.get(pk=req.data['ID']['current'])
-   data = {}
-   data['Version'] = str(obj.Version)
-   data['Descripcion'] = obj.Descripcion
-   data['Fecha'] = str(obj.Fecha)
-   data['IDProcedimiento'] = obj.IDProcedimiento   
-  elif req.data['mode'] == 'update':
-   pass
-   fields = {}
-   fields['Version'] = req.data['data']['Version']
-   fields['Descripcion'] = req.data['data']['Descripcion'] 
-   fields['Fecha'] = datetime.strptime(req.data['data']['Fecha'], "%Y-%m-%d").date()     
-   fields['IDProcedimiento'] = M.Procedimiento.objects.filter(Objetivo=req.data['data']['IDProcedimiento']).values('ID')[0]['ID'] if req.data['data']['IDProcedimiento'] else None   
-   updatedObj = M.HistorialCambios(pk=req.data['data']['ID'],**fields)
-   updatedObj.save()   
-  return Response(json.dumps({'data':data}))
- 
- def delete(self,req):
-  print('---->',req.data['ID'])
-  objToDelete = M.HistorialCambios.objects.get(pk=req.data['ID'])
-  objToDelete.delete()
-  return Response({'response':'ok'}) 
-
- def list(self, req):
-  data = serializers.serialize('json',M.HistorialCambios.objects.all())
-  if data == '[]':
-   data = M.HistorialCambios.__doc__
-   data = data.replace(' ','')
-   data = data.replace('(','')
-   data = data.replace(')','')
-   data = data.replace('HistorialCambios','')
-   data = data.split(',')  
-   data.append('statusEmpty')
-   data.append({'route':'historialcambios'})  
-  return Response(data)
-
+  if req.data['mode'] == 'requestRecords':
+   recordsRenombrator = lambda newColumnNames=None, targetTable=None:[dict(zip(newColumnNames, record.values())) for record in targetTable]
+   records = recordsRenombrator(targetTable = M.HistorialCambios.objects.filter(FormName=req.data['formName']).filter(DocumentKey=req.data['documentKey']).values('Fecha','Version','Descripcion'),newColumnNames=['Fecha','Versión','Descripción de la creación o modificación del documento'])
+   return Response({'msg':'ok','payload':records})
+  
 
 class UsuarioView(viewsets.ViewSet):
- 
  def create(self,req):
   user = req.data['cred']['username']
   password = req.data['cred']['password']
@@ -1088,7 +1024,7 @@ class PuestoDescripcionView(viewsets.ViewSet):
   if req.data['mode'] == 'request_ficha_tecnica':
    documentoPk = M.Documentos.objects.filter(Codigo=req.data['puestoDescriCode']).values('ID')
    puestoDescri = M.DescripcionPuesto.objects.filter(CodigoPuesto=documentoPk[0]['ID']) if documentoPk else ''
-   if puestoDescri:
+   if puestoDescri and puestoDescri[0].OrganigramaFile:
      file = bytes(puestoDescri[0].OrganigramaFile)
      mime = magic.Magic(mime=True)
      tipo_mime = mime.from_buffer(file)    
@@ -1349,7 +1285,6 @@ class PoliticaView(viewsets.ViewSet):
     for record in targetTable
     for fkRecord in eval('M.%s' % fkTable).objects.filter(pk=record[targetColumn]).values(fkColumn)] 
    payload = {}
-  #  parsedPuestoRecords = []
    payload['ObjetivoPolitica_CodigoPolitica'] = docuRecords
    payload['ObjetivoPolitica_DocumentosReferenciasPolitica'] = M.Documentos.objects.all().values('ID','Codigo','Descripcion')
    payload['ResponsabilidadesPolitica_Puesto'] = M.Puestos.objects.all().values('ID','Descripcion')      
@@ -1363,16 +1298,11 @@ class PoliticaView(viewsets.ViewSet):
     if documentoPk:
      tempObj = {}
      politicaPk = ''
-     pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None: [
-     {**record, newColumnName: fkRecord[fkColumn]}
-     for record in targetTable
-     for fkRecord in eval('M.%s' % fkTable).objects.filter(pk=record[targetColumn]).values(fkColumn)
-     ]
      recordsRenombrator = lambda newColumnNames=None, targetTable=None:[dict(zip(newColumnNames, record.values())) for record in targetTable]
      tempObj['Politica'] = M.Politica.objects.filter(CodigoPolitica=documentoPk).values('ID','CodigoPolitica','ObjetivoDescri','AlcanceDescri','ClasificacionPoliticaDescri','PrecioCompra','HorarioRecibo','ProveedoresDescri','PagoDescri')    
      tempObj['Politica'] = tempObj['Politica'][0] if tempObj['Politica'] else ''
      politicaPk = tempObj['Politica']['ID']
-     tempObj['DocumentosReferenciasPolitica'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.DocumentosReferenciasPolitica.objects.filter(Politica=politicaPk).values('ID','IDDocumento'), fkTable='Documentos', targetColumn='IDDocumento', fkColumn='Descripcion', newColumnName='Documentos'), newColumnNames=['ID','na','Documentos'])     
+     tempObj['DocumentosReferenciasPolitica'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.DocumentosReferenciasPolitica.objects.filter(Politica=politicaPk).values('ID','IDDocumento'), fkTable='Documentos', targetColumn='IDDocumento', fkColumn='Descripcion', newColumnName='Documentos'), newColumnNames=['ID','na','Documentos'])
      tempObj['ResponsabilidadesPolitica'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.ResponsabilidadesPolitica.objects.filter(Politica=politicaPk).values('ID','Indice','Puesto','Descri'), fkTable='Puestos', targetColumn='Puesto', fkColumn='Descripcion', newColumnName='Puesto'),newColumnNames=['ID','Indice','Puesto','Descripción'])
      tempObj['TerminologiasPolitica'] = recordsRenombrator(targetTable=pkTranslator(targetTable=M.TerminologiasPolitica.objects.filter(Politica=politicaPk).values('ID','Termino','Descri'), fkTable='Termino', targetColumn='Termino', fkColumn='Descripcion', newColumnName='Termino'),newColumnNames=['ID','Termino','Descripción'])
     #  tempObj['TerminologiasPolitica'] = M.TerminologiasPolitica.objects.filter(Politica=politicaPk).values('ID','Termino','Descri')
@@ -1404,8 +1334,87 @@ class PoliticaView(viewsets.ViewSet):
       print('----------------------------------xxxxx>',recordToDelete)           
       if recordToDelete:
        recordToDelete[0].delete()  
+  if req.data['mode'] == 'save_tipo_politica':
+   recordToUpdate = M.Politica.objects.filter(CodigoPolitica=req.data['codigoPolitica'])
+   if recordToUpdate and type(req.data['file']) != str:
+    recordToUpdate[0].TipoPoliticaFile = req.data['file'].read()
+    recordToUpdate[0].save()   
+  if req.data['mode'] == 'request_tipo_politica':
+   documentoPk = M.Documentos.objects.filter(Codigo=req.data['codigoPolitica']).values('ID')
+   politica = M.Politica.objects.filter(CodigoPolitica=documentoPk[0]['ID']) if documentoPk else ''
+   if politica and politica[0].TipoPoliticaFile:       
+     file = bytes(politica[0].TipoPoliticaFile)
+     mime = magic.Magic(mime=True)
+     tipo_mime = mime.from_buffer(file)    
+     return HttpResponse(file,content_type=tipo_mime)
+   return Response([])
+  return Response({'msg':'ok'})
+ 
+class InstructivoView(viewsets.ViewSet):
+ 
+ def list(self,req):
+  InstructivoRecords = M.Instructivo.objects.all().values('CodigoInstructivo','ObjetivoDescri','AlcanceDescri')
+  parsedInstructivoRecords = []
+  for record in InstructivoRecords:
+   codigoInstructivo = M.Documentos.objects.filter(pk=record['CodigoInstructivo']).values('Codigo')
+   codigoInstructivo = codigoInstructivo[0]['Codigo'] if codigoInstructivo else ''
+   parsedInstructivoRecords.append([codigoInstructivo,record['ObjetivoDescri'],record['AlcanceDescri']])
+  return Response({'columns':[{'title':'Código del instructivo'},{'title':'Objetivo general del instructivo'},{'title':'Alcance del instructivo'}],'records':parsedInstructivoRecords})
+ 
+ def create(self,req):
+  if req.data['mode'] == 'fillForm':
+   docuRecords = list(M.Documentos.objects.filter(Codigo__contains='INS').exclude(
+    Codigo__in=M.Documentos.objects.filter(pk__in=[M.Instructivo.objects.all().values('CodigoInstructivo')]).values('Codigo')
+    ).values('ID','Codigo','Descripcion'))
+   pkTranslator = lambda targetTable=None, fkTable=None, targetColumn=None, fkColumn=None, newColumnName=None: [
+    {**record, newColumnName: fkRecord[fkColumn]}
+    for record in targetTable
+    for fkRecord in eval('M.%s' % fkTable).objects.filter(pk=record[targetColumn]).values(fkColumn)] 
+   payload = {}
+   payload['Instructivo_CodigoInstructivo'] = docuRecords  
+
+   if 'CodigoInstructivo' in req.data.keys():   
+    selfDocumentCode = list(M.Documentos.objects.filter(Codigo=req.data['CodigoInstructivo']).values('ID','Codigo','Descripcion'))
+    documentoPk = selfDocumentCode[0]['ID'] if selfDocumentCode else ''
+    payload['Instructivo_CodigoInstructivo'].extend(selfDocumentCode)
+    if documentoPk:
+     tempObj = {}
+     instructivoPk = ''
+     recordsRenombrator = lambda newColumnNames=None, targetTable=None:[dict(zip(newColumnNames, record.values())) for record in targetTable]
+     tempObj['Instructivo'] = M.Instructivo.objects.filter(CodigoInstructivo=documentoPk).values('ID','CodigoInstructivo','ObjetivoDescri','AlcanceDescri')    
+     tempObj['Instructivo'] = tempObj['Instructivo'][0] if tempObj['Instructivo'] else ''
+     instructivoPk = tempObj['Instructivo']['ID']
+     tempObj['InstructivoInstrucciones'] = recordsRenombrator(targetTable=M.InstructivoInstrucciones.objects.filter(Instructivo=instructivoPk).values('ID','Indice','Descri'),newColumnNames=['ID','Indice','Descripción'])
+     tempObj['InstructivoAnexo'] = recordsRenombrator(targetTable=M.InstructivoAnexo.objects.filter(Instructivo=instructivoPk).values('ID','Numero','Descri','Codigo'),newColumnNames=['ID','No.','Nombre','Código'])
+     payload['specificData'] = {**tempObj}
+   return Response({'msg':'ok','payload':payload})
+
+  if req.data['mode'] == 'saveInstructivoRecord':
+   instructivo = ''
+   if 'CodigoInstructivo' in req.data['payload'].keys():
+    documentoPk = M.Documentos.objects.filter(Codigo=req.data['payload']['CodigoInstructivo']).values('ID')
+    instructivo = M.Instructivo.objects.filter(CodigoInstructivo=documentoPk[0]['ID']) if documentoPk else ''
+    instructivo.update(**req.data['payload']['Instructivo'])
+   else:
+    instructivo = M.Instructivo.objects.create(**req.data['payload']['Instructivo'])
+   for dataTable in req.data['payload'].keys():    
+    if dataTable in ['CodigoInstructivo','Instructivo','RevAprobacion','historialCambios','recordsToDelete']:continue
+    for dataTableRecord in req.data['payload'][dataTable]:
+     cleanedRecord = dataTableRecord
+     print('----------------------------------x>',dataTableRecord)     
+     if 'elementHtml' in cleanedRecord.keys():cleanedRecord.pop('elementHtml')
+     cleanedRecord['Instructivo'] = instructivo[0].pk if 'CodigoInstructivo' in req.data['payload'].keys() else instructivo.pk
+     eval('M.%s'%(dataTable)).objects.create(**cleanedRecord)
+    for record in req.data['payload']['recordsToDelete']:
+     if record.keys():
+      tableName = list(record.keys())[0]
+      recordToDelete = eval('M.%s'%(tableName)).objects.filter(pk=record[tableName])
+      print('----------------------------------xxxxx>',recordToDelete)           
+      if recordToDelete:
+       recordToDelete[0].delete()
 
   return Response({'msg':'ok'})
+ 
 
 router = DefaultRouter()
 
@@ -1440,5 +1449,7 @@ router.register(r'puestodescripcion', PuestoDescripcionView, basename='puestodes
 router.register(r'manual', ManualView, basename='manual')
 
 router.register(r'politica', PoliticaView, basename='politica')
+
+router.register(r'instructivo', InstructivoView, basename='instructivo')
 
 urlpatterns = router.urls + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
