@@ -898,7 +898,7 @@ class HistorialCambioView(viewsets.ViewSet):
     if section == 'recordsToDelete' or req.data['payload'][section]=={}:continue
     formatedDescription += '%s'%section
     for recordTitle in req.data['payload'][section]:
-     formatedRecordString = '*  '  
+     formatedRecordString = '* '  
      for recordProp in req.data['payload'][section][recordTitle]:
       propValue = req.data['payload'][section][recordTitle][recordProp]
       formatedRecordString = formatedRecordString + ' ' + propValue
