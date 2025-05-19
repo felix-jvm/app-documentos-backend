@@ -940,12 +940,17 @@ class UsuarioView(viewsets.ViewSet):
  def create(self,req):
   user = req.data['cred']['username']
   password = req.data['cred']['password']
+  # user = 'prueba'
+  # password = 'prueba1235'
+  # permisonivel = 2
   if req.data['mode'] == 'userCreation':
    permisonivel = req.data['cred']['permisonivel']
    readyPass = bcrypt.hashpw(password.encode('utf-8'),bcrypt.gensalt())
    M.Usuario.objects.create(**{'Nombre':user,'Contrasena':readyPass,'Activo':True,'PermisoNivel':permisonivel})
    return Response({'msg':'ok'})   
   elif req.data['mode'] == 'login': 
+  #  readyPass = bcrypt.hashpw(password.encode('utf-8'),bcrypt.gensalt())
+  #  M.Usuario.objects.create(**{'Nombre':user,'Contrasena':readyPass,'Activo':True,'PermisoNivel':permisonivel})
    recordsToFilter = list(M.Usuario.objects.filter(Nombre=user))
    for record in recordsToFilter:
     hashedPass = record.Contrasena.tobytes()
